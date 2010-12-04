@@ -1,0 +1,16 @@
+Package: SeqTools
+Title: Utilities for dealing with sequencing data
+Version: 0.0.1
+Author: Steve Lianoglou,
+License: Artistic-2.0
+Description: Utilities to support projects using sequencing data
+Maintainer: Steve Lianoglou <slianoglou@gmail.com>
+Depends: GenomicRanges (>= 1.2.1)
+Imports: methods, Biostrings (>= 2.17.6), GenomicRangesnges, GenomicRanges,
+         rtracklayer (>= 1.7.11), data.table (>= 1.5.2), ShortRead
+Suggests: testthat (>= 0.3),
+          org.Hs.eg.db,
+          BSgenome,
+          BSgenome.Hsapiens.UCSC.hg18 (>= 1.3.14)
+biocViews: Infrastructure
+
