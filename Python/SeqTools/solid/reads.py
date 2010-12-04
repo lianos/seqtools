@@ -1,4 +1,4 @@
-from SeqTools import NGSRead, NGSQuality
+from SeqTools import NGSRead, NGSSequenceSpace, NGSQuality
 
 class SolidRead(NGSRead):
     """Documentation for SolidRecord"""

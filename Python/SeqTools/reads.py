@@ -1,8 +1,8 @@
 from SeqTools.utilities.enum import Enum
 import re
 
-NGSQuality = Enum('UNKNOWN', 'SOLEXA', 'ILLUMINA', 'SANGER', 'SOLID')
 NGSSequenceSpace = Enum('BASE', 'COLOR')
+NGSQuality = Enum('UNKNOWN', 'SOLEXA', 'ILLUMINA', 'SANGER', 'SOLID')
 
 class NGSRead(object):
     """Base class for an object that represents a read from a sequencer"""
