@@ -4,45 +4,63 @@ from itertools import izip
 import os,re
 
 from ..fasta.io import seek_to_start
+
+from . import SolidRead
 from . import dibase
 from . import convert
 
-class SolidRead(object):
-    """Documentation for SolidRecord"""
+def parse(csfasta, csqual=None, sequence_convert=None,
+          quality_convert=None):
+    """Returns sequence and quality records one at a time via a generator.
     
-    def __init__(self, _id, sequence=None, quality=None, quality_type='original'):
-        self.id = _id
-        self.sequence = sequence
-        self.quality = quality
-        self.quality_type = quality_type
-        self.in_colorspace = True
+    Arguments:
+    - `csfasta`: The path to the csfasta file
+    - `csqual`: The path to the quality file
+    - `sequence_cnvert`: A list of function names used to convert the sequence
+       of the reads. These functions are applied in the same order they are
+       given.
+    - `quality_convert` : A list of function names used to convert the quality
+       scores of reads. These functions are applied in the same order they
+       are given.
     
-    def __trim_quality(self, n, side='left'):
-        if side == 'left':
-            if self.quality_type == 'original':
-                while n > 0:
-                    self.quality = self.quality[(self.quality.find(' ') + 1):]
-                    n = n - 1
-            elif self.quality_type == 'integer':
-                self.quality = self.quality[n:]
-        else:
-            raise Exception("Trimming from right is easy")
+    """
+    seq_convert = {
+        'basespace' : convert.colorspace_to_basespace,
+    }
     
-    def trim(self, n, side="left"):
-        if side == 'left':
-            self.sequence = self.sequence[n:]
-        else:
-            self.sequence = self.sequence[:-n]
-        self.__trim_quality(n, side)
+    qual_convert = {
+        'integer'   : convert.quality_to_integer,
+        'sanger'    : convert.quality_to_sanger,
+        'solexa'    : convert.quality_to_sanger,
+        'illumina'  : convert.quality_to_illumina,
+    }
     
-    def __repr__(self):
-        """docstring for __repr__"""
-        repr = "\n".join(["{'id' : '>%s'" % self.id,
-                          " 'sequence' : '%s'" % self.sequence,
-                          " 'quality' : '%s'}" % str(self.quality)])
-        return repr
-
-# END : Class SolidRecord
+    ## Load the conversion functions
+    if sequence_convert is not None:
+        if isinstance(sequence_convert, str):
+            sequence_convert = [sequence_convert]
+        sequence_convert = [seq_convert[wut] for wut in sequence_convert]
+    if quality_convert is not None:
+        if isinstance(quality_convert, str):
+            quality_convert = [quality_convert]
+        quality_convert = [qual_convert[wut] for wut in qual_convert]
+    
+    ## Determine if we are parsing qualities along with csfasta files or not
+    if csqual is None:
+        _parse = _parse_csfasta_only(csfasta)
+    else:
+        _parse = _parse_csfasta_with_qual(csfasta, csqual)
+    
+    ## Get down to business
+    for record in _parse:
+        if sequence_convert is not None:
+            for sc in sequence_convert:
+                record.sequence = sc(record.sequence)
+        if quality_convert is not None:
+            for qc in quality_convert:
+                record.quality = qc(record.quality)
+        yield record
+    raise StopIteration("Parsing finished")
 
 def _parse_csfasta_only(csfasta):
     ffh = seek_to_start(csfasta)
@@ -84,51 +102,6 @@ def _parse_csfasta_with_qual(csfasta, qual):
             yield record
     ffh.close()
     qfh.close()
-    raise StopIteration("Parsing finished")
-
-def parse(csfasta, csqual=None, sequence_convert=None,
-          quality_convert=None):
-    """Returns sequence and quality records one at a time via a generator.
-    
-    Arguments:
-    - `csfasta`: The path to the csfasta file
-    - `csqual`: The path to the quality file
-    - `comment_char`: Skip lines with these characters. Assumes they only appear
-    at the start of the file
-    
-    """
-    seq_convert = {
-        'basespace' : convert.colorspace_to_basespace,
-    }
-    qual_convert = {
-        'integer'   : convert.quality_to_integer,
-        'sanger'    : convert.quality_to_sanger,
-        'solexa'    : convert.quality_to_sanger,
-        'illumina'  : convert.quality_to_illumina,
-    }
-    
-    if sequence_convert is not None:
-        if isinstance(sequence_convert, str):
-            sequence_convert = [sequence_convert]
-        sequence_convert = [seq_convert[wut] for wut in sequence_convert]
-    if quality_convert is not None:
-        if isinstance(quality_convert, str):
-            quality_convert = [quality_convert]
-        quality_convert = [qual_convert[wut] for wut in qual_convert]
-    
-    if csqual is None:
-        _parse = _parse_csfasta_only(csfasta)
-    else:
-        _parse = _parse_csfasta_with_qual(csfasta, csqual)
-    
-    for record in _parse:
-        if sequence_convert is not None:
-            for sc in sequence_convert:
-                record.sequence = sc(record.sequence)
-        if quality_convert is not None:
-            for qc in quality_convert:
-                record.quality = qc(record.quality)
-        yield record
     raise StopIteration("Parsing finished")
 
 
