@@ -27,7 +27,7 @@ class SolidRead(NGSRead):
     
     def to_basespace(self):
         obj = copy.deepcopy(self)
-        if obj.sequence_space != NGSSequenceSpace.BASE:
+        if obj.sequence_space == NGSSequenceSpace.COLOR:
             obj.sequence = convert.colorspace_to_basespace(obj.sequence)
         return obj
 
