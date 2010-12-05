@@ -1,4 +1,7 @@
+import copy
+
 from SeqTools import NGSRead, NGSSequenceSpace, NGSQuality
+from SeqTools.solid import convert
 
 class SolidRead(NGSRead):
     """Documentation for SolidRecord"""
@@ -21,6 +24,12 @@ class SolidRead(NGSRead):
             return len(self.sequence) - 1
         else:
             return super(SolidRead,self).__len__()
+    
+    def to_basespace(self):
+        obj = copy.deepcopy(self)
+        if obj.sequence_space != NGSSequenceSpace.BASE:
+            obj.sequence = convert.colorspace_to_basespace(obj.sequence)
+        return obj
 
 ###############################################################################
 ## Utilities

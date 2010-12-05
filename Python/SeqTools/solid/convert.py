@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-
-from . import dibase
-
+from SeqTools.solid import dibase
 
 ###############################################################################
 ## Sequence Conversions
