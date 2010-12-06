@@ -1,3 +1,5 @@
+from SeqTools.fasta import FastaRecord
+
 def seek_to_start(fh, max_iter=100):
     """Moves a file handle to the first ">" in a FASTA file.
     
@@ -22,3 +24,22 @@ def seek_to_start(fh, max_iter=100):
         idx = idx - 1
     return fh
 
+def parse(fasta):
+    """Parse a fasta file into a FastaRecord.
+    
+    You might consider using Biopython.
+    """
+    fh = seek_to_start(fasta)
+    record = None
+    for line in fh:
+        line = line.strip()
+        is_new = line.startswith(">")
+        if is_new:
+            if record is not None:
+                record.value = "".join(record.value)
+                yield record
+            record = FastaRecord(line, list())
+        else:
+            record.value.append(line)
+    fh.close()
+    raise StopIteration("Parsing finished")

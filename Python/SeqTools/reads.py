@@ -1,8 +1,9 @@
 import re
+
 from SeqTools.utilities.enum import Enum
+from SeqTools.qualities import NGSQuality
 
 NGSSequenceSpace = Enum('BASE', 'COLOR')
-NGSQuality = Enum('UNKNOWN', 'SOLEXA', 'ILLUMINA', 'SANGER', 'SOLID')
 
 class NGSRead(object):
     """Base class for an object that represents a read from a sequencer"""
@@ -18,9 +19,12 @@ class NGSRead(object):
     
     def __len__(self):
         if self.sequence is None:
-            return 0
+            l = 0
         else:
-            return len(self.sequence)
+            l = len(self.sequence)
+            if self.sequence_space == NGSSequenceSpace.COLOR:
+                l = l - 1
+        return l
     
     def __getitem__(self, key):
         if not isinstance(key, str):
@@ -32,6 +36,13 @@ class NGSRead(object):
         if not isinstance(key, str):
             raise TypeError("NGSRead objects only subscriptable by character")
         self.__dict__[key] = value
+    
+    def __repr__(self):
+        """Basic representation of the read"""
+        repr = "\n".join(["{'id' : '>%s'" % self.id,
+                          " 'sequence' : '%s'" % self.sequence,
+                          " 'quality' : '%s'}" % str(self.quality)])
+        return repr
     
     def trim(self, n, side="left", minlength=4):
         if n <= 0:

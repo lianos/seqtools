@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+
+from optparse import OptionParser
+
+from SeqTools.solid.io import parse 
+from SeqTools.fasta.io import parse as parse_fasta
+
+# END : Class QualityDict
+
+def parse_solid_fasta(file_path):
+    """Parse the SOLiD Qual files (in FASTA format)"""
+    qm = QualityMatrix()
+    for record in parse_fasta(file_path):
+        for idx,value in enumerate(record.value.split()):
+            qm.observe_at(idx, value)
+    return qm
+
+    
+if __name__ == '__main__':
+    usage = "usage: %prog [options] READS\n\n" \
+            "Collects quality statistics for the reads in the sample.\n" \
+            "Should be able to work on multiple import formats, ie.\n" \
+            "FASTQ or SOLiD *.qual files via the -t/--type flag\n\n" \
+            "The output is meant to resemble that from the FASTX toolkit."
+    parser = OptionParser(usage=usage)
+    parser.add_option("-t", "--type", dest="type", default="illumina",
+                      help="The type of quality stats (illumina, solid, etc)")
+    
+    (options, args) = parser.parse_args()
+    
+            
