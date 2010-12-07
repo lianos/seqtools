@@ -11,8 +11,7 @@ def parse_solid_fasta(file_path):
     """Parse the SOLiD Qual files (in FASTA format)"""
     qm = QualityMatrix()
     for record in parse_fasta(file_path):
-        for idx,value in enumerate(record.value.split()):
-            qm.observe_at(idx, value)
+        qm.observe_all(idx, value.split())
     return qm
 
     
