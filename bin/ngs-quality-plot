@@ -1,0 +1,163 @@
+#!/usr/bin/env Rscript
+
+suppressPackageStartupMessages({
+  library(optparse)
+})
+
+param.required <- function(options, name, parser, msg=NULL) {
+  if (is.null(msg)) msg <- sprintf("ERROR: --%s parameter required", name)
+  if (nchar(options[[name]]) == 0) {
+    cat(msg, "\n\n")
+    print_help(parser)
+    quit(status=1)
+  }
+}
+
+bxp.stats <- function(bp.stats) {
+  stats <- do.call(cbind, lapply(bp.stats, '[[', 'stats'))
+  n <- sapply(bp.stats, '[[', 'n')
+  conf <- sapply(bp.stats, '[[', 'conf')
+  out <- unlist(sapply(bp.stats, '[[', 'out'))
+  out.group <- sapply(1:length(bp.stats), function(idx) {
+    wut <- bp.stats[[idx]]$out
+    if (length(wut) == 0) {
+      NULL
+    } else {
+      rep(idx, length(wut))
+    }
+  })
+  out.group <- unlist(out.group)
+  names <- as.character(1:length(bp.stats))
+  list(stats=stats, n=n, conf=conf, out=out, group=out.group, names=names)
+}
+
+##' Gather statistics for boxplot over a vector
+##'
+##' This is a slight modification to the "internal" boxplot.stats function
+##' so that it easily works on IRanges::Rle's
+##'
+##' The two "hinges" are versions of the first and third quartile.
+##' @param x A numeric vector (Rle) of observations
+##' @param coef Determines how far the plot "whiskers" extend out from the box
+##' If coef is positive, the whiskers extend to the most extreme data point
+##' which is no more than coef times the length of the box away from the box.
+##' A value of zero causes the whiskers to extend to the data extermes
+##' (and no outliers are returned)
+##' @param do.conf Logical setting the conf out value to be empty or not
+##' @param do.out Sam as do.conf
+##'
+##' @return A list/structure with the following values
+##' 
+##' \code{stats} vector containing the values for the (i) lower whisker,
+##' (ii) lower hinge, (iii) the median, (iv) upper hinge; (v) exterme of
+##' upper whisker.
+##'
+##' \code{n} the number of observations
+##'
+##' \code{out} the values of any data points which lie beyond the extremes of
+##' the whiskers (\code{if (do.out)}).
+my.boxplot.stats <- function (x, coef = 1.5, do.conf = TRUE, do.out = TRUE) 
+{
+    if (coef < 0) {
+      stop("'coef' must not be negative")
+    }
+    nna <- !is.na(x)
+    n <- sum(nna)
+    stats <- my.fivenum(x, na.rm=TRUE)
+    iqr <- diff(stats[c(2, 4)])
+    
+    if (coef == 0) {
+      do.out <- FALSE
+    } else {
+      out <- if (!is.na(iqr)) {
+        x < (stats[2L] - coef * iqr) | x > (stats[4L] + coef * iqr)
+      } else {
+        !is.finite(x)
+      }
+      if (any(out[nna], na.rm = TRUE)) {
+        stats[c(1, 5)] <- range(x[!out], na.rm = TRUE)
+      }
+    }
+    conf <- if (do.conf) {
+      stats[3L] + c(-1.58, 1.58) * iqr/sqrt(n)
+    }
+
+    if (do.out) {
+      out <- as.vector(x[out & nna])
+    } else {
+      out <- numeric(0L)
+    }
+    
+    list(stats=stats, n=n, conf=conf, out=out)
+}
+
+## Slight modification to stats::fivenum function for this problem
+my.fivenum <- function(x, na.rm=TRUE, is.sorted=TRUE) {
+  xna <- is.na(x)
+  if (na.rm) {
+    x <- x[!xna]
+  } else if (any(xna)) {
+    return(rep.int(NA, 5))
+  }
+
+  if (!is.sorted) {
+    x <- sort(x)    
+  }
+  
+  n <- length(x)
+  if (n == 0) 
+    rep.int(NA, 5)
+  else {
+    n4 <- floor((n + 3)/2)/2
+    d <- c(1, n4, (n + 1)/2, n + 1 - n4, n)
+    as.integer(0.5 * (x[floor(d)] + x[ceiling(d)]))
+  }
+}
+
+################################################################################
+## Main
+usage <- "usage: plot-ngs-quality.R [OPTIONS] QUALITYFILE.txt OUTFILE.png"
+usage <- paste(usage, "Plot results generated from `ngs-quality-stats` script",
+               "in QUALITYFILE.txt to OUTFILE.png")
+
+option.list <-
+  list(make_option(c('-h', '--height'), default=800,
+                   help="Height of target picture (in pixels)"),
+       make_option(c("-w", "--width"), default=800,
+                   help="Width of target picture (in pixels)"))
+parser <- OptionParser(usage=usage, option_list=option.list)
+opt <- parse_args(parser, positional_arguments=TRUE)
+
+if (length(opt$args) == 1) {
+  cat("Error: Two arguments required\n")
+  print_help(parser)
+  quit(status=1)
+}
+
+file <- opt$args[1]
+img <- opt$args[2]
+
+if (!file.exists(file)) {
+  cat("Error: quality file can not be read\n")
+  quit(status=1)
+}
+
+cat("... loading required packages ...")
+suppressPackageStartupMessages({
+  library(IRanges)
+})
+qm <- as.matrix(read.table(file, row.names=1, comment.char="#"))
+qm <- qm[order(as.numeric(rownames(qm))),]
+colnames(qm) <- NULL
+
+qdata <- apply(qm, 2, function(distro) {
+  Rle(as.numeric(rownames(qm)), distro)
+})
+
+qstats <- lapply(qdata, my.boxplot.stats)
+bxp.z <- bxp.stats(qstats)
+
+png(img, height=opts$height, width=opts$width)
+bxp(bxp.z, main="Quality Score Distribution")
+dev.off()
+

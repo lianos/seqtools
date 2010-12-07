@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import os, sys, time
 from optparse import OptionParser
 
 from SeqTools import QualityMatrix
@@ -8,24 +8,56 @@ from SeqTools.fasta.io import parse as parse_fasta
 
 # END : Class QualityDict
 
-def parse_solid_fasta(file_path, read_length):
+def parse_quality_fasta(file_path, read_length):
     """Parse the SOLiD Qual files (in FASTA format)"""
+    if read_length == 0:
+        ## Guess
+        for record in parse_fasta(file_path):
+            read_length = len(record.value.split())
+            break
     qm = QualityMatrix(read_length=read_length)
     for record in parse_fasta(file_path):
         qm.observe_all(record.value.split())
     return qm
 
-    
+def parse_quality_fastq(file_path, read_length):
+    raise NotImplementedError("FASTQ quality parser not done")
+
+def parse_quality(file_path, read_length, qtype):
+    """Wrapper to parse the quality file"""
+    qtype = qtype.lower()
+    parsef = {
+      "fasta" : parse_quality_fasta,
+      "fastq" : parse_quality_fastq
+    }
+    qm = parsef[qtype](file_path, read_length)
+    return qm
+
 if __name__ == '__main__':
     usage = "usage: %prog [options] READS\n\n" \
             "Collects quality statistics for the reads in the sample.\n" \
             "Should be able to work on multiple import formats, ie.\n" \
             "FASTQ or SOLiD *.qual files via the -t/--type flag\n\n" \
-            "The output is meant to resemble that from the FASTX toolkit."
+            "The output is meant to resemble that from the FASTX toolkit\n" \
+            "and is sent to STDOUT"
     parser = OptionParser(usage=usage)
-    parser.add_option("-t", "--type", dest="type", default="illumina",
-                      help="The type of quality stats (illumina, solid, etc)")
+    parser.add_option("-l", "--length", dest="read_length", default=0,
+                      type='int',
+                      help="The (maximum) length of reads (quality scores)")
+    parser.add_option("-t", "--type", dest="type", default="fasta",
+                      help="The file the stats are embedded in")
     
     (options, args) = parser.parse_args()
+    if len(args) != 1:
+        parser.error("Quality file required as positional argument")
+    qfile = args[0]
+    if not os.path.isfile(qfile):
+        parser.error("Can't read quality file: %s", qfile)
+
+    t0 = time.time()
+    qm = parse_quality(qfile, options.read_length, options.type)
+    seconds = time.time() - t0
+    sys.stdout.write("# Took %.2f minutes\n" % (seconds / 60.0))
+    sys.stdout.write(str(qm) + "\n")
     
-            
+
