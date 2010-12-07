@@ -2,16 +2,17 @@
 
 from optparse import OptionParser
 
+from SeqTools import QualityMatrix
 from SeqTools.solid.io import parse 
 from SeqTools.fasta.io import parse as parse_fasta
 
 # END : Class QualityDict
 
-def parse_solid_fasta(file_path):
+def parse_solid_fasta(file_path, read_length):
     """Parse the SOLiD Qual files (in FASTA format)"""
-    qm = QualityMatrix()
+    qm = QualityMatrix(read_length=read_length)
     for record in parse_fasta(file_path):
-        qm.observe_all(idx, value.split())
+        qm.observe_all(record.value.split())
     return qm
 
     

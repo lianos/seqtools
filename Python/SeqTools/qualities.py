@@ -1,3 +1,11 @@
+"""
+.. module:: qualities
+   :platform: Unix, Windows
+   :synopsis: Tools to deal with (phred) quality scores fore reads
+
+.. moduleauthor:: Steve Lianoglou <slianoglou@gmail.com>
+
+"""
 import numpy as np
 from SeqTools.utilities.enum import Enum
 
@@ -5,17 +13,27 @@ from SeqTools.utilities.enum import Enum
 ## in a reasonably efficient (in memory) manner
 
 NGSQuality = Enum('UNKNOWN', 'SOLEXA', 'ILLUMINA', 'SANGER', 'SOLID')
-
+NGSQualityEncoding = Enum('ASCII', 'INTEGER')
 class QualityMatrix(dict):
     """Store quality score observations in a space efficient fashion.
     
     This object does not assume a specific range/order of the quality scores.
-    The ``QualityMatrix.rows`` is used to keep track of which row a given
-    quality score (represented as a string) is stored in.
     """
     
     def __init__(self, read_length=32, quality_type=NGSQuality.UNKNOWN,
-                 encoding='ASCII'):
+                 encoding='NGSQualityEncoding.ASCII'):
+        """Build a QualityMatrix for the given ``read_length``.
+        
+        Args:
+            read_length (int): The (maximum) length of the reads in the 
+                experiment
+            quality_type (int): The ``NGSQuality`` ``Enum`` specifying the
+                "space" the quality scores are in (``UNKNOWN``, ``SOLEXA``,
+                etc.).
+            encoding (int): The ``NGSQualityEncoding`` Enum specifying whether
+                the quality score is ascii or integer.
+        
+        """
         super(QualityMatrix, self).__init__()
         self.read_length = read_length
         self.quality_type = quality_type
@@ -28,7 +46,16 @@ class QualityMatrix(dict):
         return value
     
     def observe_at(self, position, quality):
-        """Record an observation of a single quality score at given position"""
+        """Record an observation of a single quality score at given position.
+        
+        Args:
+            position (int): The position (0-based index) of the read the
+                quality is observed at.
+            quality : The quality score observed at the position.
+        
+        Returns:
+            None
+        """
         if position >= self.read_length:
             raise ValueError("Position of quality observation is out of bounds")
         if self.quality_type == NGSQuality.SOLID:
@@ -39,20 +66,34 @@ class QualityMatrix(dict):
     def observe_all(self, quality_sequence):
         """Observe all quality scores for a given record.
         
-        ``quality_sequence`` should be enumerable. If it is string of
-        space-separated integers (like SOLID quality scores from their fasta
-        qual files), make sure to split() the string before passing it in here.
+        Args:
+            quality_sequence (iterable): If it is string of space-separated
+            integers (like SOLID quality scores from their fasta qual files),
+            make sure to ``split()`` the string before passing it in here.
+            Otherwise a "standard" FASTQ/Phred score can be passed, eg.
+            ``aR`\HZFW[KT^GUVF[STGFQ\[Q___TY]_T_BB`` would be kosher
         
+        Returns:
+            None
         """
         for idx,value in enumerate(quality_sequence):
             self.observe_at(idx, value)
     
     def as_matrix(self):
-        order = sorted(self.keys())
+        """Converts the ``QualityMatrix`` to a NumPy matrix.
+        
+        Returns:
+            A ``NumPy`` matrix of the quality scores.
+        """
+        order = self.matrix_keys()
         m = np.zeros((len(self), self.read_length))
         for idx,value in enumerate(order):
             m[idx,:] = self[value]
         return m
+    
+    def matrix_keys(self):
+        """Defines the order that the rows of matrix are printed"""
+        return sorted(self.keys())
     
     def __str__(self):
         order = sorted(self.keys())
@@ -63,6 +104,8 @@ class QualityMatrix(dict):
             output.append(' '.join(value))
         return '\n'.join(output)
     
+    ###########################################################################
+    ## Bit rot
     def __initialize_qualities(self):
         """Initializes the dict to the known quality scores.
         
