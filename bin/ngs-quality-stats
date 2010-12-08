@@ -12,16 +12,20 @@ def parse_quality_fasta(file_path, read_length, split_quality=None):
     if read_length == 0 or split_quality is None:
         ## Guess
         for record in fasta.parse(file_path):
-            if read_length == 0:
-                read_length = len(record.value.split())
+            value = record.value.strip()
             if split_quality is None:
-                split_quality = _has_space.match(record.value().strip()) is None
+                split_quality = _has_space.match(value) is not None
+            if read_length == 0:
+                if split_quality:
+                    read_length = len(value.split())
+                else:
+                    read_length = len(value)
             break
     qm = QualityMatrix(read_length=read_length)
-    for record in parse_fasta(file_path):
+    for idx,record in enumerate(fasta.parse(file_path)):
         value = record.value
         if split_quality:
-            value = value.split()
+            value = [int(x) for x in value.split()]
         qm.observe_all(value)
     return qm
 
@@ -30,7 +34,7 @@ def parse_quality_fastq(file_path, read_length):
         for record in fastq.parse(file_path):
             read_length = len(record)
     qm = QualityMatrix(read_length)
-    for fq in fastq.parse(file_path):
+    for idx,fq in enumerate(fastq.parse(file_path)):
         qm.observe_all([ord(x) for x in fq.quality])
     return qm
 

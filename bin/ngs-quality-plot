@@ -131,12 +131,12 @@ usage <- paste(usage, "Plot results generated from `ngs-quality-stats` script",
                "in QUALITYFILE.txt to OUTFILE.png")
 
 option.list <-
-  list(make_option(c('-h', '--height'), default=800,
+  list(make_option(c('-H', '--height'), default=800,
                    help="Height of target picture (in pixels)"),
-       make_option(c("-w", "--width"), default=800,
+       make_option(c("-W", "--width"), default=800,
                    help="Width of target picture (in pixels)"),
        make_option(c("-o", "--outliers"), action="store_true", default=FALSE,
-                   help="Plot outliers in quality scores"))
+                   help="Plot outliers in quality scores (default: false)"))
 parser <- OptionParser(usage=usage, option_list=option.list)
 opt <- parse_args(parser, positional_arguments=TRUE)
 
