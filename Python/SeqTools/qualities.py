@@ -5,6 +5,8 @@
 
 .. moduleauthor:: Steve Lianoglou <slianoglou@gmail.com>
 
+How to handle PHRED/Solexa/Illumina scores
+http://lists.open-bio.org/pipermail/biopython-dev/2009-February/005386.html
 """
 import numpy as np
 from SeqTools.utilities.enum import Enum

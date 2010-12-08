@@ -6,5 +6,5 @@
 from SeqTools.reads import NGSRead, NGSSequenceSpace
 from SeqTools.qualities import NGSQuality, NGSQualityEncoding, QualityMatrix
 
-__all__ = ['fasta', 'solid']
+# __all__ = ['fasta', 'solid']
 

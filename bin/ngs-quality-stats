@@ -1,27 +1,38 @@
 #!/usr/bin/env python
 import os, sys, time
 from optparse import OptionParser
+import re
 
 from SeqTools import QualityMatrix
-from SeqTools.solid.io import parse 
-from SeqTools.fasta.io import parse as parse_fasta
+from SeqTools import fasta, fastq
 
-# END : Class QualityDict
-
-def parse_quality_fasta(file_path, read_length):
+_has_space = re.compile(".*\s.*")
+def parse_quality_fasta(file_path, read_length, split_quality=None):
     """Parse the SOLiD Qual files (in FASTA format)"""
-    if read_length == 0:
+    if read_length == 0 or split_quality is None:
         ## Guess
-        for record in parse_fasta(file_path):
-            read_length = len(record.value.split())
+        for record in fasta.parse(file_path):
+            if read_length == 0:
+                read_length = len(record.value.split())
+            if split_quality is None:
+                split_quality = _has_space.match(record.value().strip()) is None
             break
     qm = QualityMatrix(read_length=read_length)
     for record in parse_fasta(file_path):
-        qm.observe_all(record.value.split())
+        value = record.value
+        if split_quality:
+            value = value.split()
+        qm.observe_all(value)
     return qm
 
 def parse_quality_fastq(file_path, read_length):
-    raise NotImplementedError("FASTQ quality parser not done")
+    if read_length == 0:
+        for record in fastq.parse(file_path):
+            read_length = len(record)
+    qm = QualityMatrix(read_length)
+    for fq in fastq.parse(file_path):
+        qm.observe_all([ord(x) for x in fq.quality])
+    return qm
 
 def parse_quality(file_path, read_length, qtype):
     """Wrapper to parse the quality file"""

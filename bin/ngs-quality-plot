@@ -61,8 +61,9 @@ my.boxplot.stats <- function (x, coef = 1.5, do.conf = TRUE, do.out = TRUE)
     if (coef < 0) {
       stop("'coef' must not be negative")
     }
-    nna <- !is.na(x)
-    n <- sum(nna)
+    ## nna <- !is.na(x)
+    ## n <- sum(nna)
+    n <- length(x)
     stats <- my.fivenum(x, na.rm=TRUE)
     iqr <- diff(stats[c(2, 4)])
     
@@ -72,9 +73,13 @@ my.boxplot.stats <- function (x, coef = 1.5, do.conf = TRUE, do.out = TRUE)
       out <- if (!is.na(iqr)) {
         x < (stats[2L] - coef * iqr) | x > (stats[4L] + coef * iqr)
       } else {
-        !is.finite(x)
+        ## !is.finite(x)
+        numeric(0L)
       }
-      if (any(out[nna], na.rm = TRUE)) {
+      ## if (any(out[nna], na.rm = TRUE)) {
+      ##   stats[c(1, 5)] <- range(x[!out], na.rm = TRUE)
+      ## }
+      if (any(out)) {
         stats[c(1, 5)] <- range(x[!out], na.rm = TRUE)
       }
     }
@@ -83,7 +88,12 @@ my.boxplot.stats <- function (x, coef = 1.5, do.conf = TRUE, do.out = TRUE)
     }
 
     if (do.out) {
-      out <- as.vector(x[out & nna])
+      ## out <- as.vector(x[out & nna])
+      if (sum(out) > 10) {
+        out <- runValue(x[out])
+      } else {
+        out <- as.vector(x[out])
+      }
     } else {
       out <- numeric(0L)
     }
@@ -93,16 +103,16 @@ my.boxplot.stats <- function (x, coef = 1.5, do.conf = TRUE, do.out = TRUE)
 
 ## Slight modification to stats::fivenum function for this problem
 my.fivenum <- function(x, na.rm=TRUE, is.sorted=TRUE) {
-  xna <- is.na(x)
-  if (na.rm) {
-    x <- x[!xna]
-  } else if (any(xna)) {
-    return(rep.int(NA, 5))
-  }
+  ## xna <- is.na(x)
+  ## if (na.rm) {
+  ##   x <- x[!xna]
+  ## } else if (any(xna)) {
+  ##   return(rep.int(NA, 5))
+  ## }
 
-  if (!is.sorted) {
-    x <- sort(x)    
-  }
+  ## if (!is.sorted) {
+  ##   x <- sort(x)    
+  ## }
   
   n <- length(x)
   if (n == 0) 
@@ -124,7 +134,9 @@ option.list <-
   list(make_option(c('-h', '--height'), default=800,
                    help="Height of target picture (in pixels)"),
        make_option(c("-w", "--width"), default=800,
-                   help="Width of target picture (in pixels)"))
+                   help="Width of target picture (in pixels)"),
+       make_option(c("-o", "--outliers"), action="store_true", default=FALSE,
+                   help="Plot outliers in quality scores"))
 parser <- OptionParser(usage=usage, option_list=option.list)
 opt <- parse_args(parser, positional_arguments=TRUE)
 
@@ -136,13 +148,14 @@ if (length(opt$args) == 1) {
 
 file <- opt$args[1]
 img <- opt$args[2]
+options <- opt$options
 
 if (!file.exists(file)) {
   cat("Error: quality file can not be read\n")
   quit(status=1)
 }
 
-cat("... loading required packages ...")
+cat("... loading required packages ...\n")
 suppressPackageStartupMessages({
   library(IRanges)
 })
@@ -154,10 +167,10 @@ qdata <- apply(qm, 2, function(distro) {
   Rle(as.numeric(rownames(qm)), distro)
 })
 
-qstats <- lapply(qdata, my.boxplot.stats)
+qstats <- lapply(qdata, my.boxplot.stats, do.out=options$outliers)
 bxp.z <- bxp.stats(qstats)
 
-png(img, height=opts$height, width=opts$width)
+png(img, height=options$height, width=options$width)
 bxp(bxp.z, main="Quality Score Distribution")
 dev.off()
 
