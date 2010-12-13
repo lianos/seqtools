@@ -6,6 +6,9 @@ def colorspace_to_basespace(x):
     """Convert color space to basespace"""
     return dibase.decodeSequence(x)
 
+def basespace_to_colorspace(x):
+    return dibase.encodeSequence(x)
+
 ###############################################################################
 ## Quality Conversions
 ##
@@ -25,6 +28,30 @@ def colorspace_to_basespace(x):
 ## J - Illumina 1.5+ Phred+64,  raw reads typically (3, 40)
 ##    with 0=unused, 1=unused, 2=Read Segment Quality Control Indicator (bold) 
 ##    (Note: See discussion above).
+
+def quality_to_phred(quality_line, base=33, as_ascii=True):
+    """Convert SOLiD quality to Sanger (base=33).
+    
+    Inspired from the galaxy::solid2sanger and cutadapt::quality_to_ascii
+    functions.
+    
+    >>> quality_to_ascii("17 4 29 18")
+    '2%>3'
+    """
+    phred = list()
+    for x in quality_line.split(" "):
+        x = int(x)
+        if x < 0:
+            x = 0
+        phred.append(x + base)
+    if as_ascii:
+        phred = [chr(x) for x in phred]
+        phred = ''.join(phred)
+    return phred
+
+def quality_to_sanger(quality, as_ascii=True):
+    return quality_to_ascii(quality, 33, as_ascii=as_ascii)
+
 def quality_to_integer(x):
     return [int(q) for q in x.split()]
 
