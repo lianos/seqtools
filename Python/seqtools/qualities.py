@@ -9,7 +9,7 @@ How to handle PHRED/Solexa/Illumina scores
 http://lists.open-bio.org/pipermail/biopython-dev/2009-February/005386.html
 """
 import numpy as np
-from SeqTools.utilities.enum import Enum
+from seqtools.utilities.enum import Enum
 
 ## Classes and code to primarily deal with gathering stats over NGS primary
 ## in a reasonably efficient (in memory) manner

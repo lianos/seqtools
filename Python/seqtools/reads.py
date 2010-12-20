@@ -1,7 +1,7 @@
 import re
 
-from SeqTools.utilities.enum import Enum
-from SeqTools.qualities import NGSQuality
+from seqtools.utilities.enum import Enum
+from seqtools.qualities import NGSQuality
 
 NGSSequenceSpace = Enum('BASE', 'COLOR')
 

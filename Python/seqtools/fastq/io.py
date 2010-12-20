@@ -1,4 +1,4 @@
-from SeqTools.fastq import FastqRead
+from seqtools.fastq import FastqRead
 
 def parse(fastq, *args, **kwargs):
     fh = open(fastq, 'r')

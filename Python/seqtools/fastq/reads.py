@@ -1,6 +1,6 @@
 import copy
 
-from SeqTools import NGSRead, NGSSequenceSpace, NGSQuality
+from seqtools import NGSRead, NGSSequenceSpace, NGSQuality
 
 class FastqRead(NGSRead):
     """Documentation for SolidRecord"""

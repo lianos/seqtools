@@ -1,4 +1,4 @@
-from SeqTools.solid import dibase
+from seqtools.solid import dibase
 
 ###############################################################################
 ## Sequence Conversions

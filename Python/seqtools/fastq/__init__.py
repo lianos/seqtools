@@ -1,2 +1,2 @@
-from SeqTools.fastq.reads import FastqRead
-from SeqTools.fastq.io import parse
+from seqtools.fastq.reads import FastqRead
+from seqtools.fastq.io import parse

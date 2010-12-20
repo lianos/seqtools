@@ -1,4 +1,4 @@
-from SeqTools.fasta import FastaRecord
+from seqtools.fasta import FastaRecord
 
 def seek_to_start(fh, max_iter=100):
     """Moves a file handle to the first ">" in a FASTA file.

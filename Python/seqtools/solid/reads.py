@@ -1,7 +1,7 @@
 import copy
 
-from SeqTools import NGSRead, NGSSequenceSpace, NGSQuality
-from SeqTools.solid import convert
+from seqtools import NGSRead, NGSSequenceSpace, NGSQuality
+from seqtools.solid import convert
 
 class SolidRead(NGSRead):
     """Documentation for SolidRecord"""

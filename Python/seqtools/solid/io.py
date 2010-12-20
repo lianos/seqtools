@@ -1,10 +1,10 @@
 from itertools import izip
 import os,re
 
-from SeqTools.fasta.io import seek_to_start
+from seqtools.fasta.io import seek_to_start
 
-from SeqTools.solid.reads import SolidRead
-from SeqTools.solid import convert
+from seqtools.solid.reads import SolidRead
+from seqtools.solid import convert
 
 def parse(csfasta, csqual=None, sequence_convert=None,
           quality_convert=None):
