@@ -3,8 +3,8 @@
 from optparse import OptionParser
 import os,sys
 
-from SeqTools import solid
-from SeqTools.solid import convert
+from seqtools import solid
+from seqtools.solid import convert
 
 if __name__ == '__main__':
     usage = "usage: %prog [options] CSFASTA [QUAL]\n\n" \

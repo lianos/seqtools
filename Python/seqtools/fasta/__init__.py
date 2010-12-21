@@ -48,7 +48,7 @@ class FastaRecord(object):
         return repr
 
 #
-from SeqTools.fasta.io import parse
+from seqtools.fasta.io import parse
 
     
 # END : Class FastaRecord

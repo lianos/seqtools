@@ -1,4 +1,5 @@
 from seqtools.fasta import FastaRecord
+from seqtools.io import xopen
 
 def seek_to_start(fh, max_iter=100):
     """Moves a file handle to the first ">" in a FASTA file.
@@ -6,7 +7,7 @@ def seek_to_start(fh, max_iter=100):
     All lines that come before that are ignored.
     """
     if isinstance(fh, str):
-        fh = open(fh, 'r')
+        fh = xopen(fh, 'r')
     fh.seek(0)
     found = False
     for idx,line in enumerate(fh):

@@ -1,7 +1,8 @@
 from seqtools.fastq import FastqRead
+from seqtools.io import xopen
 
 def parse(fastq, *args, **kwargs):
-    fh = open(fastq, 'r')
+    fh = xopen(fastq, 'r')
     record = None
     for idx,line in enumerate(fh):
         line = line.strip()

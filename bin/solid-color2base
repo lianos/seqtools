@@ -3,9 +3,9 @@
 from optparse import OptionParser
 import os,sys
 
-from SeqTools.solid import SolidRead
-from SeqTools.solid.convert import colorspace_to_basespace
-from SeqTools.solid.io import parse
+from seqtools.solid import SolidRead
+from seqtools.solid.convert import colorspace_to_basespace
+from seqtools.solid.io import parse
 
 if __name__ == '__main__':
     usage = "usage: %prog [options] CSFASTA\n\n" \

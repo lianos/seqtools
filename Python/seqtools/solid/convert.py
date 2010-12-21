@@ -50,7 +50,7 @@ def quality_to_phred(quality_line, base=33, as_ascii=True):
     return phred
 
 def quality_to_sanger(quality, as_ascii=True):
-    return quality_to_ascii(quality, 33, as_ascii=as_ascii)
+    return quality_to_phred(quality, 33, as_ascii=as_ascii)
 
 def quality_to_integer(x):
     return [int(q) for q in x.split()]
@@ -66,11 +66,11 @@ def quality_to_string(x):
 ## ...
 ## $qual .= $conv_table[$_+64]; #intfq: SOLiD -> Standard
 
-def quality_to_sanger(x):
-    if isinstance(x, str):
-        x = quality_to_integer(x)
-    raise NotImplementedError()
-
-def quality_to_illumina(x):
-    x = quality_to_sanger(x)
-    return [val - 33 for val in x]
+# def quality_to_sanger(x):
+#     if isinstance(x, str):
+#         x = quality_to_integer(x)
+#     raise NotImplementedError()
+# 
+# def quality_to_illumina(x):
+#     x = quality_to_sanger(x)
+#     return [val - 33 for val in x]

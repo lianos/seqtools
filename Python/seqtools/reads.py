@@ -102,7 +102,7 @@ def trim_quality(quality, n, side='right', minlength=4,
         if side == 'right':
             return quality[:-n]
         else:
-            return quality
+            return quality[n:]
     
     if side == 'right':
         while n > 0:
