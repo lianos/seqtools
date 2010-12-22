@@ -59,7 +59,7 @@ if __name__ == '__main__':
     parser.add_option("-l", "--length", dest="read_length", default=0,
                       type='int',
                       help="The (maximum) length of reads (quality scores)")
-    parser.add_option("-t", "--type", dest="type", default="fasta",
+    parser.add_option("-t", "--type", dest="type", default="fastq",
                       help="The file the stats are embedded in")
     
     (options, args) = parser.parse_args()

@@ -17,6 +17,9 @@ class FastqRead(NGSRead):
         if obj.sequence_space == NGSSequenceSpace.COLOR:
             obj.sequence = convert.colorspace_to_basespace(obj.sequence)
         return obj
+    
+    def __str__(self):
+        return "@%s\n%s\n+\n%s\n" % (self.id, self.sequence, self.quality)
 
 ###############################################################################
 ## Utilities

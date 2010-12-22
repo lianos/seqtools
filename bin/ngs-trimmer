@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+from __future__ import division
+
+import os, sys
+from optparse import OptionParser
+
+from seqtools import fastq, io
+
+if __name__ == '__main__':
+    usage = """usage: %prog [options] FASTQ [OUTFILE]
+    
+    Trim base pairs off of a read. User can specify absolute positions, or the
+    number of reads to trim off of each side.
+    
+    To compress output on the fly, ensure that OUTFILE ends in *.gz
+    
+    NOTE: Only works on FASTQ files for now, use solid2fastq.pl from bwa,
+          or solid2fast from BFAST.
+    
+    Trimming reads by N BP off of each side:
+      -l  : Number of reads to trim from left side
+      -r  : Number of reads to trim from right side
+    
+    Trimming reads by absolute position (ranges are inclusive):
+      -s  : Start position to keep
+      -e  : End position to keep 
+    
+    """
+    parser = OptionParser(usage=usage)
+    parser.add_option("-l", "--left", dest="left", default=None, type=int,
+                      help="Number of BP's to remove from left side")
+    parser.add_option("-r", "--right", dest="right", default=None, type=int,
+                      help="Number of BP's to remove from right side")
+    parser.add_option('-s', '--start', dest='start', default=None, type=int,
+                      help="The first position of read to start at (inclusive).")
+    parser.add_option('-e', '--end', dest='end', default=None, type=int,
+                      help="The last position of the read to keep (inclusive)")
+                      
+    (options, args) = parser.parse_args()
+    
+    absolute = bool(options.start and options.end)
+    relative = bool(options.left and options.right)
+    
+    if not absolute ^ relative:
+        parser.error("Need to fully specify EITHER -l/-r or -s/-e")
+    
+    if absolute:
+        left,right = options.sart, options.end
+        parser.error("Implement record[n:n] for this")
+    else:
+        left,right = options.left, options.right
+    
+    if len(args) < 1:
+        parser.error("Illegal number of arguments")
+    infile = args[0]
+    if not os.path.isfile(infile):
+        parser.error("Cannot read FASTQ file")
+    
+    if len(args) > 1:
+        outfile = args[1]
+        if os.path.isfile(outfile):
+            parser.error("Destination file already exists")
+        outfile = io.xopen(outfile, 'w')
+    else:
+        outfile = sys.stdout
+    
+    for record in fastq.parse(infile):
+        if left > 0:
+            record = record.trim(left, 'left')
+        if right > 0:
+            record = record.trim(right, 'right')
+        outfile.write(str(record))
+    
+    if len(args) > 1:
+        outfile.close()
+
