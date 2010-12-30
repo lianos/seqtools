@@ -7,12 +7,13 @@ from optparse import OptionParser
 from seqtools import fastq, io
 
 if __name__ == '__main__':
-    usage = """usage: %prog [options] FASTQ [OUTFILE]
+    usage = """usage: %prog [options] FASTQ 
     
     Trim base pairs off of a read. User can specify absolute positions, or the
     number of reads to trim off of each side.
     
-    To compress output on the fly, ensure that OUTFILE ends in *.gz
+    Output defaults to STDOUT. To compress output on the fly, use the
+    -o/--output flag and specify a name that ends in *.gz
     
     NOTE: Only works on FASTQ files for now, use solid2fastq.pl from bwa,
           or solid2fast from BFAST.
@@ -35,11 +36,14 @@ if __name__ == '__main__':
                       help="The first position of read to start at (inclusive).")
     parser.add_option('-e', '--end', dest='end', default=None, type=int,
                       help="The last position of the read to keep (inclusive)")
-                      
+    parser.add_option('-o', '--output', dest='output', default=None,
+                      help="Name of file to save new reads. Defaults STDOUT")                  
+    parser.add_option('-m', '--minlength', dest='minlength', default=4,
+                      help="Reads less than this length after trimming are tossed")
     (options, args) = parser.parse_args()
     
-    absolute = bool(options.start and options.end)
-    relative = bool(options.left and options.right)
+    absolute = isinstance(options.start, int) and isinstance(options.end, int)
+    relative = isinstance(options.left, int) and isinstance(options.right, int)
     
     if not absolute ^ relative:
         parser.error("Need to fully specify EITHER -l/-r or -s/-e")
@@ -56,15 +60,18 @@ if __name__ == '__main__':
     if not os.path.isfile(infile):
         parser.error("Cannot read FASTQ file")
     
-    if len(args) > 1:
-        outfile = args[1]
-        if os.path.isfile(outfile):
+    if options.output is not None:
+        if os.path.isfile(options.output):
             parser.error("Destination file already exists")
-        outfile = io.xopen(outfile, 'w')
+        outfile = io.xopen(options.output, 'w')
     else:
         outfile = sys.stdout
     
+    minlength = options.minlength
     for record in fastq.parse(infile):
+        ## Do some handling to set left/right when using 'absolute trimming'
+        if len(record) - left - right < minlength:
+            continue
         if left > 0:
             record = record.trim(left, 'left')
         if right > 0:
