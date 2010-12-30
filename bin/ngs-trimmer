@@ -18,8 +18,8 @@ if __name__ == '__main__':
           or solid2fast from BFAST.
     
     Trimming reads by N BP off of each side:
-      -l  : Number of reads to trim from left side
-      -r  : Number of reads to trim from right side
+      -l  : Number of basepairs to trim from left side
+      -r  : Number of basepairs to trim from right side
     
     Trimming reads by absolute position (ranges are inclusive):
       -s  : Start position to keep
