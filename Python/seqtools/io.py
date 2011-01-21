@@ -1,6 +1,6 @@
 import gzip
 
-def xopen(filename, mode='r'):
+def xopen(x, mode='r', is_gzipped=None):
     """
     Replacement for the "open" function that can also open
     files that have been compressed with gzip. If the filename ends with .gz,
@@ -11,13 +11,25 @@ def xopen(filename, mode='r'):
     
     Taken from cutadapt
     """
-    if filename.endswith('.gz'):
+    if isinstance(x, file):
+        if is_gzipped:
+            return gzip.GzipFile(fileobj=x, mode='rb')
+        else:
+            return x
+    
+    if not isinstance(x, str):
+        raise ValueError("Don't know how to handle objects of type: " + str(type(x)))
+    
+    if is_gzipped is None:
+        is_gzipped = x.endswith('.gz')
+    
+    if is_gzipped:
         # if is_closing:
         #     return closing(gzip.open(filename, mode))
         # else:
         #     return gzip.open(filename, mode)
         if mode.find('b') == -1:
             mode = mode + 'b'
-        return gzip.open(filename, mode)
+        return gzip.open(x, mode)
     else:
-        return open(filename, mode)
+        return open(x, mode)

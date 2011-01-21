@@ -45,6 +45,7 @@ class NGSRead(object):
         return repr
     
     def trim(self, n, side="left", minlength=4):
+        """Number of basepairs to trim off of the given side."""
         if n <= 0:
             return
         self.sequence = trim_sequence(self.sequence, n, side, minlength,

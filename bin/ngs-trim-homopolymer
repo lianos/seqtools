@@ -1,0 +1,153 @@
+#!/usr/bin/env python
+from __future__ import division
+
+import os, sys, time, re
+from optparse import OptionParser
+
+from seqtools import fastq, io, NGSSequenceSpace
+
+# _5pt_color = re.compile("^T.*?[^0]")
+#_5pt_base = re.compile("(?:.*)(T+)$")
+
+_base_end_regex = {
+    'A' : re.compile(r"([ACGNT]*?)(A+$)"),
+    'C' : re.compile(r"([ACGNT]*?)(C+$)"),
+    'G' : re.compile(r"([ACGNT]*?)(G+$)"),
+    'T' : re.compile(r"([ACGNT]*?)(T+$)"),
+    'N' : re.compile(r"([ACGNT]*?)(N+$)"),
+}
+
+_base_start_regex = {
+    'A' : re.compile(r"(^A+)[CGNT][ACGNT]+$"),
+    'C' : re.compile(r"(^C+)[AGNT][ACGNT]+$"),
+    'G' : re.compile(r"(^G+)[ACNT][ACGNT]+$"),
+    'T' : re.compile(r"(^T+)[ACGN][ACGNT]+$"),
+    'N' : re.compile(r"(^N+)[ACGT][ACGNT]+$"),
+}
+
+_color_end_regex = re.compile(r"(.*?)(0+$)")
+# _color_start_regex = 
+
+def trim_homopolymers(read, regex, side='right', colorspace=False,
+                      minlength=4):
+    # if read.sequence_space == NGSSequenceSpace.COLOR:
+    #     regex = _5pt_color
+    # else:
+    #     regex = _5pt_base
+    # m = regex.match(read.sequence)
+    # m = _homoT_end.match(read.sequence)
+    m = regex.match(read.sequence)
+    if m is not None:
+        trim_n = len(read) - m.start(2)
+        if colorspace and side == 'right':
+            trim_n = trim_n - 1
+        read.trim(trim_n, side=side, minlength=minlength)
+    return read
+
+if __name__ == '__main__':
+    usage = """usage: %prog [options] FASTQ
+
+    Trim homopolymers off of ends of reads. If FASTQ is "-" then the program
+    reads from STDIN.
+
+    Output defaults to STDOUT. To compress output on the fly, use the
+    -o/--output flag and specify a name that ends in *.gz
+    
+    Both basespace, colorspace, and double-encoded colorspace should
+    be supported.
+    
+    NOTE: Only works on FASTQ files for now, use solid2fastq.pl from bwa,
+          or solid2fast from BFAST.
+    
+    TODO: Support trimming from start of read.
+    """
+    parser = OptionParser(usage=usage)
+    parser.add_option('-b', '--basepair', dest='basepair', default='A',
+                      help="Which homopolymer to strip")
+    parser.add_option('-c', '--colorspace', dest='colorspace', default=False,
+                      action='store_true',
+                      help="Trimming homopolymers will erase the -1 basepair " \
+                      "upstream from start of match")
+    parser.add_option('-d', '--doublecolor', dest='doublecolor', default=False,
+                      action='store_true',
+                      help="File is in double-encoded colorspace"),
+    parser.add_option('-s', '--side', dest='side', default='right',
+                      help="From which side?")
+    parser.add_option('-o', '--output', dest='output', default=None,
+                      help="Name of file to save new reads. Defaults STDOUT")
+    parser.add_option('-m', '--minlength', type=int, dest='minlength', default=4,
+                      help="Reads less than this length after trimming are tossed")
+    parser.add_option('-t', '--trashfile', dest='trashfile', default=None,
+                      help="Name of file to save discarded reads.")
+    # parser.add_option('-z', '--gzipped', default=None, action='store_true',
+    #                   help="Force script to assume input is gzipped. This parameter "\
+    #                        "is necessary when piping a gzipped file through STDIN (doesn't work)")
+    (options, args) = parser.parse_args()
+
+    if len(args) < 1:
+        parser.error("Illegal number of arguments")
+    infile = args[0]
+    
+    if infile == "-":
+        infile = sys.stdin
+    elif not os.path.isfile(infile):
+        parser.error("Cannot read FASTQ file")
+
+    if options.output is not None:
+        if os.path.isfile(options.output):
+            parser.error("Destination file already exists")
+        outfile = io.xopen(options.output, 'w')
+        report_out = sys.stdout
+        to_stdout = False
+    else:
+        outfile = sys.stdout
+        report_out = sys.stderr
+        to_stdout = True
+
+    trashfile = options.trashfile
+    if trashfile is not None:
+        if os.path.isfile(trashfile):
+            parser.error("Trashfile already exists")
+        trasfhile = io.xopen(trashfile)
+    
+    minlength = options.minlength
+    colorspace = options.colorspace
+    read_count = 0
+    trimmed_count = 0
+    trash_count = 0
+    
+    if options.colorspace:
+        homopoly_regex = _color_end_regex
+    else:
+        if options.doublecolor:
+            options.colorspace = True
+            options.basepair = 'A'
+        if options.basepair not in ('A', 'C', 'G', 'T', 'N'):
+            parser.error("Illegal homopolymer")
+    
+        ## TODO: Support trimming from start, too.
+        homopoly_regex = _base_end_regex[options.basepair]
+    
+    t0 = time.time()
+    for record in fastq.parse(infile):
+        read_count += 1
+        original_length = len(record)
+        try:
+            record = trim_homopolymers(record, homopoly_regex, side='right',
+                                       colorspace=colorspace,
+                                       minlength=minlength)
+            if len(record) != original_length:
+                trimmed_count += 1
+            outfile.write(str(record))
+        except ValueError, e:
+            ## Read is cut too short. Save to trasfhile.
+            trash_count += 1
+            if trashfile is not None:
+                trashfile.write(str(record))
+
+    if not to_stdout:
+        outfile.close()
+    report_out.write("Processed %d reads\n" % read_count)
+    report_out.write("  Trimmed %d\n" % trimmed_count)
+    report_out.write("  Trashed %d\n" % trash_count)
+
