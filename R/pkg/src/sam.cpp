@@ -1,8 +1,3 @@
-#include <vector>
-#include <string>
-#include <list>
-#include <iostream>
-
 #include "sam.h"
 
 using namespace std;
