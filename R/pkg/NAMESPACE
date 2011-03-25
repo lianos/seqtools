@@ -1,4 +1,8 @@
-# useDynLib(seqtools)
+useDynLib(SeqTools)
 
 import(methods)
 import(GenomicRanges)
+
+export(
+  collapseSamTagStrings
+)

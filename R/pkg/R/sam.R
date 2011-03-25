@@ -101,27 +101,32 @@ toSAMTable <- function(x, is.paired=FALSE) {
 
 ## Returns a character vector as long as the elements included in the sub-lists
 ## that will be the tags for each alignment
-collapseSamTagStrings <- function(...) {
-  args <- list(...)
-  if (is.list(args)) {
-    if (length(args) == 1L) {
-      args <- args[[1]]
+collapseSamTagStrings <- function(..., .sep="\t", .use.c=TRUE) {
+  clean.tags <- list(...)
+  if (is.list(clean.tags)) {
+    if (length(clean.tags) == 1L) {
+      clean.tags <- clean.tags[[1]]
     } else {
       stop("What's going on here?")
     }
   }
-  if (is.null(names(args))) {
+  if (is.null(names(clean.tags))) {
     stop("Need names for arguments")
   }
-
-  ## TODO: Speed up tag:concatenation when creating SAM files, this is the
-  ## slowest part of this function. Generating the `clean.tags` variable
-  ## above isn't so bad.
-  collapse.tags <- sapply(seq_along(clean.tags[[1]]), function(i) {
-    xtags <- sapply(clean.tags, '[[', i)
-    xtags <- xtags[nchar(xtags) > 0]
-    do.call(paste, list(xtags,  collapse="\t"))
-  })
+  
+  if (.use.c) {
+    collapse.tags <- .Call("collapse_sam_tag_list", clean.tags, .sep,
+                           PACKAGE="SeqTools")
+  } else {
+    ## TODO: Speed up tag:concatenation when creating SAM files, this is the
+    ## slowest part of this function. Generating the `clean.tags` variable
+    ## above isn't so bad.
+    collapse.tags <- sapply(seq_along(clean.tags[[1]]), function(i) {
+      xtags <- sapply(clean.tags, '[[', i)
+      xtags <- xtags[nchar(xtags) > 0]
+      do.call(paste, list(xtags,  collapse=.sep))
+    })
+  }
 
   collapse.tags
 }
