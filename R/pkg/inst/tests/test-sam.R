@@ -1,11 +1,32 @@
 context("SAM")
 
 test_that("C code to collapse tag produces same result as R", {
-  tag.list <- list(a=letters[1:10], b=letters[11:20], c=letters[5:14])
-  tag.list$a[c(1, 5, 10)] <- ""
-  tag.list$b[c(4, 8, 10)] <- ""
-  tag.list$c[c(1, 8, 10)] <- ""
+  N <- 20
+  N.axe <- 5
+  tag.list <- lapply(c('a', 'b', 'c'), function(x) {
+    x <- sample(letters, N, replace=TRUE)
+    x[sample(N, N.axe)] <- ''
+    x
+  })
+  names(tag.list) <- c('a', 'b', 'c')
+  
   .r <- collapseSamTagStrings(tag.list, .use.c=FALSE)
   .c <- collapseSamTagStrings(tag.list, .use.c=TRUE)
   expect_equal(.c, .r)
 })
+
+test_that("C code to collapse tags is (much) faster", {
+  N <- 3000
+  N.axe <- 100
+  tag.list <- lapply(c('a', 'b', 'c'), function(x) {
+    x <- sample(letters, N, replace=TRUE)
+    x[sample(N, N.axe)] <- ''
+    x
+  })
+  names(tag.list) <- c('a', 'b', 'c')
+  
+  r.time <- system.time(collapseSamTagStrings(tag.list, .use.c=FALSE))
+  expect_that(collapseSamTagStrings(tag.list, .use.c=TRUE),
+              takes_less_than(r.time['elapsed'] / 10))
+})
+

@@ -11,7 +11,8 @@ Imports: methods, Biostrings (>= 2.17.6), GenomicRanges (>= 1.2.1),
 Suggests: testthat (>= 0.4),
           org.Hs.eg.db,
           BSgenome,
-          BSgenome.Hsapiens.UCSC.hg18 (>= 1.3.14)
+          BSgenome.Hsapiens.UCSC.hg18 (>= 1.3.14),
+          rbenchmark
 LazyLoad: yes
 LinkingTo: Rcpp
 biocViews: Infrastructure
