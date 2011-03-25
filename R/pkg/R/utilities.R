@@ -1,3 +1,16 @@
+##' @nord
+checkVerbose <- function(...) {
+  verbose <- list(...)$verbose
+  if (is.null(verbose)) verbose <- options()$verbose
+  verbose
+}
+
+##' @nord
+dir.exists <- function(path) {
+  path <- as.character(path)
+  !is.na(file.info(path)$isdir) && file.info(path)$isdir
+}
+
 ##' Convert NA values in vectors and data.frames to a default value
 ##' 
 ##' @export
