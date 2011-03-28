@@ -8,10 +8,12 @@ test_that("C code to collapse tag produces same result as R", {
     x[sample(N, N.axe)] <- ''
     x
   })
-  names(tag.list) <- c('a', 'b', 'c')
+  names(tag.list) <- paste('tag', c('XA', 'XB', 'XC'), sep='.')
   
-  .r <- collapseSamTagStrings(tag.list, .use.c=FALSE)
-  .c <- collapseSamTagStrings(tag.list, .use.c=TRUE)
+  # .r <- SeqTools:::.collapseSamTagStrings(tag.list, .use.c=FALSE)
+  # .c <- SeqTools:::.collapseSamTagStrings(tag.list, .use.c=TRUE)
+  suppressWarnings(.r <- combineIntoSamTagsVector(tag.list, .use.c=FALSE))
+  .c <- combineIntoSamTagsVector(tag.list, .use.c=TRUE)
   expect_equal(.c, .r)
 })
 
@@ -23,10 +25,12 @@ test_that("C code to collapse tags is (much) faster", {
     x[sample(N, N.axe)] <- ''
     x
   })
-  names(tag.list) <- c('a', 'b', 'c')
+  names(tag.list) <- paste('tag', c('XA', 'XB', 'XC'), sep=".")
   
-  r.time <- system.time(collapseSamTagStrings(tag.list, .use.c=FALSE))
-  expect_that(collapseSamTagStrings(tag.list, .use.c=TRUE),
+  suppressWarnings({
+    r.time <- system.time(combineIntoSamTagsVector(tag.list, .use.c=FALSE))
+  })
+  expect_that(combineIntoSamTagsVector(tag.list, .use.c=TRUE),
               takes_less_than(r.time['elapsed'] / 10))
 })
 

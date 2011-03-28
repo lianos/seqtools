@@ -1,14 +1,19 @@
 ################################################################################
 ## Write GRanges object into SAM records
 
-## This doesn't try to be fancy. All of the info in the SAM file
-## needs to be in the values() of the GRanges object.
-##
-## Counts aren't expanded.
-##
-
-##' Converts reads sotred in a \code{GRanges} into a SAM file.
-toSAMTable <- function(x, is.paired=FALSE, tag.prefix="tag.") {
+##' Converts reads sotred in a \code{GRanges} object into a SAM file.
+##'
+##' This method isn't very smart: all SAM columns need to be in the
+##' \code{values()}'s \code{DataFrame} using the same column names that are
+##' used in the values returned from \code{\link{scanBam}}. If the columns are
+##' missing, then default values will be used.
+##'
+##' @param x A \code{GRanges} object
+##' @param is.paired \code{logical} indicating if the reads are paired.
+##' @param tag.prefix columns that who are destined to wind up in the tag fields
+##' of the alignments must start with this prefix in order to be processed
+##' correctly, eg: \code{tag.NM}, \code{tag.XA}, etc.
+toSamTable <- function(x, is.paired=FALSE, tag.prefix="tag.") {
   if (!inherits(x, 'GRanges')) {
     stop("Only work on GRanges objects")
   }
@@ -71,20 +76,16 @@ toSAMTable <- function(x, is.paired=FALSE, tag.prefix="tag.") {
     isize <- as.integer(ifelse(is.na(isize), 0L, mpos))
   }
 
-  ## if (any(colnames(meta) == 'exon.anno')) {
-  ##   rename <- which(colnames(meta) == 'exon.anno')
-  ##   colnames(meta)[rename] <- 'tag.ZA'
-  ## }
-
   sam <- data.frame(qname=as.character(meta$qname), flag=flag,
                     rname=as.character(seqnames(x)), pos=start(x),
                     mapq=mapq, cigar=cigar, mrnm=mrnm, mpos=mpos, isize=isize,
                     seq=seq, qual=qual)
-  
-  sam.tags <- parseTagsFromDataFrame(meta, tag.prefix)
+
+  sam.tags <- combineIntoSamTagsVector(meta, tag.prefix)
   if (!is.null(tags)) {
     sam$tags <- sam.tags
   }
+
   sam
 }
 
@@ -94,36 +95,56 @@ toSAMTable <- function(x, is.paired=FALSE, tag.prefix="tag.") {
 ##' Parses the type of each column in df to add the appropriate SAM type
 ##' (eg i,Z, etc.) and returns a character vector of tags that collapse
 ##' the tags across rows.
-##' 
-##' @param df a \code{data.frame}-like object. Some of these columns should
+##'
+##' @param x a \code{list}-like object (a \code{data.frame} will do) with
+##' each element representing a tag "column." Each elements of \code{x} must
+##' be the same length.
 ##' have tag info to parse out.
 ##' @param tag.prefix the prefix used to find the elemnts (columns) of
 ##' \code{df} that are actually tags.
-parseTagsFromDataFrame <- function(x, tag.prefix="tag.") {
+##' @param sep The separator to collapse multiple tags together per alignment
+##' @param .use.c Use C code for combining tags for uber quickness.
+combineIntoSamTagsVector <- function(x, tag.prefix="tag.", sep="\t", .use.c=TRUE) {
+  ## Ensure that all items in data.frame/list container are the same length
+  lengths <- unique(sapply(x, length))
+  if (length(lengths) != 1L) {
+    stop("The elements in `x` aren't uniform length")
+  }
   tag.cols <- grep(tag.prefix, names(x), fixed=TRUE)
   if (length(tag.cols) == 0L) {
     return(NULL)
   }
-  tag.names <- gsub(tag.prefix, '', names(x)[tag.cols], fixed=TRUE)
 
+  tag.names <- gsub(tag.prefix, '', names(x)[tag.cols], fixed=TRUE)
+  if (!all(nchar(tag.names) == 2)) {
+    stop("tag names can only be two letters long (XA, NM, etc.)")
+  }
+  
   ## Tags that are absent from a given alignment will be either NA or NULL
   ## here. These values are converted to 0-length character vectors.
   clean.tags <- lapply(tag.names, function(name) {
     xtags <- x[[paste('tag', name, sep=".")]]
-    xtype <- SAMTagType(xtags)
+    xtype <- SamTagType(xtags)
     xtags <- as.character(xtags)
     axe <- is.na(xtags) | is.null(xtags)
     xtags <- paste(name, xtype, xtags, sep=":")
     xtags[axe] <- ''
     xtags
   })
-  names(clean.tags) <- tag.names
-  collapseSamTagStrings(clean.tags)
+  ##names(clean.tags) <- tag.names
+  .collapseSamTagStrings(clean.tags, .sep=sep, .use.c=.use.c)
 }
 
-## Returns a character vector as long as the elements included in the
-## sub-lists that will be the tags for each alignment
-collapseSamTagStrings <- function(..., .sep="\t", .use.c=TRUE) {
+##' Returns a character vector as long as the elements included in the
+##' sub-lists that will be the tags for each alignment.
+##'
+##' Tag vectors are passed into \code{...}, which must be the same length.
+##' These are merged into one "tag string" per element.
+##'
+##' Elements in the input vectors that are NULL or NA are not included.
+##'
+##' @nord
+.collapseSamTagStrings <- function(..., .sep="\t", .use.c=TRUE) {
   clean.tags <- list(...)
   if (is.list(clean.tags)) {
     if (length(clean.tags) == 1L) {
@@ -132,17 +153,13 @@ collapseSamTagStrings <- function(..., .sep="\t", .use.c=TRUE) {
       stop("What's going on here?")
     }
   }
-  if (is.null(names(clean.tags))) {
-    stop("Need names for arguments")
-  }
   
   if (.use.c) {
     collapse.tags <- .Call("collapse_sam_tag_list", clean.tags, .sep,
                            PACKAGE="SeqTools")
   } else {
-    ## TODO: Speed up tag:concatenation when creating SAM files, this is the
-    ## slowest part of this function. Generating the `clean.tags` variable
-    ## above isn't so bad.
+    warning("You are using the R implementation of collapseSamTagStrings",
+            immediate.=TRUE)
     collapse.tags <- sapply(seq_along(clean.tags[[1]]), function(i) {
       xtags <- sapply(clean.tags, '[[', i)
       xtags <- xtags[nchar(xtags) > 0]
@@ -153,7 +170,24 @@ collapseSamTagStrings <- function(..., .sep="\t", .use.c=TRUE) {
   collapse.tags
 }
 
-SAMTagType <- function(tag.values) {
+##' Determine the SAM "type-label" for this tag.
+##'
+##' SAM types are:
+##'
+##' \begin{enumerate}
+##'   \item \code{A} printable character
+##'   \item \code{Z} printable string (spaces allowed)
+##'   \item \code{i} signed 32-bit integer
+##'   \item \code{f} single-precision floating number
+##'   \item \code{H} hex string (high nybble first)
+##' \end
+##'
+##' If none of the tests for A, Z, i, or f pass, then H is assumed.
+##'
+##' @param tag.values A character vector of the same type of tags to use
+##' inorder to guess the appropriate type.
+##' @return \code{character(1)} indicating the inferred type.
+SamTagType <- function(tag.values) {
   ## This doesn't correctly detect numeric/integers
   if (is.integer(tag.values)) {
     return('i')

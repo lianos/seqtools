@@ -4,5 +4,6 @@ import(methods)
 import(GenomicRanges)
 
 export(
-  collapseSamTagStrings
+       toSamTable,
+       combineIntoSamTagsVector
 )
