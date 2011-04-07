@@ -3,50 +3,27 @@ from __future__ import division
 
 import os, sys, time
 from optparse import OptionParser
-from collections import Counter
 
 from seqtools import fastq, io
-
-
-def window(seq, n=2):
-    """Returns a sliding window (of width n) over a character sequence"""
-    total = len(seq) - n + 1
-    for i in range(total):
-        yield seq[i:i+n]
-
-
-def kmer_frequency(sequence, k=3):
-    freq = Counter()
-    for kmer in window(sequence, k):
-        freq[kmer] += 1
-    return freq
-
-def complexity_stats(sequence, k=3, square=False):
-    """Returns the complexity score along with the number of unique kmers"""
-    kfreq = kmer_frequency(sequence, k)
-    if square:
-        score = sum([(x - 1) * (x - 1) for x in kfreq.values()])
-    else:
-        score = sum([(x - 1) for x in kfreq.values()])
-    return (score, len(kfreq))
+from seqtools.complexity import dust
 
 if __name__ == '__main__':
     usage = """usage: %prog [options] FASTQ [OUTFILE]
-    
+
     Filter reads that have low complexity, as defined by trinucleotide
     content.
-    
+
     Inspired by `dust`:
-    
+
       https://stat.ethz.ch/pipermail/bioc-sig-sequencing/2009-February/000170.html
-    
+
     High scoring sequence are low complexity. A sequence 35 bp long can have
     33 possible trinucleotides. If all of them are the same, its score is 33^2.
-    
+
     To compress output on the fly, ensure that OUTFILE ends in *.gz"""
 
     parser = OptionParser(usage=usage)
-    parser.add_option("-f", "--fraction", dest="threshold", default=0.15,
+    parser.add_option("-c", "--complexity", dest="complexity", default=0.15,
                       type=float,
                       help="The percent of the max 'low complexity score' reads " \
                            "should be below in order to be kept")
@@ -56,8 +33,10 @@ if __name__ == '__main__':
                       help="Name of file to save reads that are discareded.")
     parser.add_option("-m", "--minlength", dest="minlength", default=21,
                       help="Minimum length the read should be.")
+    parser.add_option("-s", "--statsfile", dest="statsfile", default=None,
+                      help="Name of file to save dust score stats to.")
     (options, args) = parser.parse_args()
-    
+
     ############################################################################
     ## Figure out what files we're playing with
     ## Input
@@ -66,7 +45,7 @@ if __name__ == '__main__':
     infile = args[0]
     if not os.path.isfile(infile):
         parser.error("Cannot read FASTQ file")
-    
+
     ## Output
     if len(args) > 1:
         outfile = args[1]
@@ -77,7 +56,7 @@ if __name__ == '__main__':
     else:
         outfile = sys.stdout
         close_out = False
-    
+
     ## Trash?
     if options.trashfile is not None:
         if os.path.isfile(options.trashfile):
@@ -87,19 +66,28 @@ if __name__ == '__main__':
     else:
         trashfile = None
         close_trash = False
-        
+
+    ## Stats file?
+    if options.statsfile is not None:
+        if os.path.isfile(options.statsfile):
+            parser.error("Stats file already exists")
+        statsfile = io.xopen(options.statsfile, 'w')
+        statsfile.write("sequence\tkeep\tscore\tmax_score\tn_kmers\n")
+    else:
+        statsfile = None
+
     K = options.kmer_length
-    square = False
-    threshold = options.threshold
+    square = True
+    threshold = options.complexity
     minlength = options.minlength
-    
+
     ############################################################################
     ## Get down to business
     filtered_complex = 0
     filtered_length = 0
     total_reads = 0
     t0 = time.time()
-    
+
     for record in fastq.parse(infile):
         total_reads += 1
         if len(record) < minlength:
@@ -107,36 +95,39 @@ if __name__ == '__main__':
             continue
         sequence = record.sequence
         length = len(sequence)
-        
-        # 1 isn't added since -1 is subtracted from each kmer score
-        max_score = length - K
-        if square:
-            max_score = max_score ** 2
-        
-        score, nkmers = complexity_stats(sequence, K, square)
-        if score / max_score <= threshold:
+
+        max_score = dust.max_score(sequence, K, square)
+        score, nkmers = dust.stats(sequence, K, square)
+        keep_it = score / max_score <= threshold
+
+        if keep_it:
             outfile.write(str(record))
         else:
             filtered_complex += 1
             if trashfile is not None:
                 trashfile.write(str(record))
-        
-        # outfile.write("%d\t%d\t%d\t%d\t%s\n" % (l, score, max_score, nunique, sequence))        
-        # 
-        # nfraction = record.sequence.count('N') / len(record)
-        # if nfraction > threshold:
-        #     if trashfile is not None:
-        #         trashfile.write(str(record))
-        #     filtered += 1
-        # else:
-        #     outfile.write(str(record))
-    
+
+        if statsfile is not None:
+            statsfile.write("%s\t%s\t%d\t%d\t%d\n" %
+                            (sequence, keep_it, score, max_score, nkmers))
+
     elapsed = time.time() - t0
+
+    run_stats = [
+        "Filtered complexity %d/%d reads.\n" % (filtered_complex, total_reads),
+        "Filtered minlength %d/%d reads.\n" % (filtered_length, total_reads),
+        "Took %d seconds\n" % elapsed,
+    ]
+
     if close_out:
         outfile.close()
-        sys.stdout.write("Filtered complexity %d/%d reads.\n" % (filtered_complex, total_reads))
-        sys.stdout.write("Filtered minlength %d/%d reads.\n" % (filtered_length, total_reads))
-        sys.stdout.write("Took %d seconds\n" % elapsed)
-    
+
     if close_trash:
         trashfile.close()
+
+    if statsfile is not None:
+        statsfile.close()
+
+    for rs in run_stats:
+        sys.stderr.write(rs)
+

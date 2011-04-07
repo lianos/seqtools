@@ -5,6 +5,14 @@ checkVerbose <- function(...) {
   verbose
 }
 
+checkTrace <- function(...) {
+  do.trace <- list(...)$trace
+  if (!is.logical(do.trace)) {
+    do.trace <- FALSE
+  }
+  do.trace
+}
+
 ##' @nord
 dir.exists <- function(path) {
   path <- as.character(path)
@@ -12,7 +20,7 @@ dir.exists <- function(path) {
 }
 
 ##' Convert NA values in vectors and data.frames to a default value
-##' 
+##'
 ##' @export
 ##'
 ##' @param wut The thing to convert
@@ -45,7 +53,7 @@ convert.na <- function(wut, to=".defaults.") {
       wut[[idx]] <- convert.na(wut[[idx]], to=to)
     }
   }
-  
+
   wut
 }
 

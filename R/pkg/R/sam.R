@@ -119,7 +119,7 @@ combineIntoSamTagsVector <- function(x, tag.prefix="tag.", sep="\t", .use.c=TRUE
   if (!all(nchar(tag.names) == 2)) {
     stop("tag names can only be two letters long (XA, NM, etc.)")
   }
-  
+
   ## Tags that are absent from a given alignment will be either NA or NULL
   ## here. These values are converted to 0-length character vectors.
   clean.tags <- lapply(tag.names, function(name) {
@@ -153,7 +153,7 @@ combineIntoSamTagsVector <- function(x, tag.prefix="tag.", sep="\t", .use.c=TRUE
       stop("What's going on here?")
     }
   }
-  
+
   if (.use.c) {
     collapse.tags <- .Call("collapse_sam_tag_list", clean.tags, .sep,
                            PACKAGE="SeqTools")
@@ -204,6 +204,81 @@ SamTagType <- function(tag.values) {
     return("H")
   }
 }
+
+################################################################################
+## Query SAM files directly
+
+##' Returns the command used for the aligner that created this SAM file
+##'
+##' @export
+##' @seealso \code{link{parseAlignCommandFromBAM}}
+##'
+##' @param sam.file The path to the SAM file
+##' @param n The number of lines to read at the top of the SAM file to
+##' find the result
+##' @return The command, program, and version used for alignment
+setMethod("aligner", c(x="character"),
+function(x, ...) {
+  lines <- readLines(sam.file, n=1000)
+  take <- grep("@PG", lines)
+  if (length(take) == 0) {
+    cat("No alignment-info in SAM header ")
+    return(NULL)
+  }
+  info <- strsplit(lines[take], "\t")
+  if (length(info) > 1) {
+    cat("There should only be one line for alignment into in header")
+    return(NULL)
+  }
+  info <- sapply(info[[1]], function(x) gsub("\"", "", x))
+  names(info) <- c("PG", "ID", "VN", "CL")
+  list(program=gsub("ID:", "", info[['ID']]),
+       version=gsub("VN:", "", info[['VN']]),
+       command=gsub("CL:", "", info[['CL']]))
+})
+
+##' Reads the top \code{n} lines from a SAM file to extract chromosome names.
+##'
+##' The names of the chromosomes are in the header of the file. These lines
+##' start with \code{@SQ}
+##'
+##' @export
+##' @seealso \code{\link{parseChromosomeInfoFromBAM}}
+##'
+##' @param sam.file The filepath of the SAM file
+##' @param n The number of lines to read in from the SAM file. 1000 should be
+##' \emph{more} than enough, since these @SQ lines should appear in the top of
+##' the file.
+##' @return A data.frame, with \code{$name} and \code{$length} columns
+setMethod("seqinfo", c(x="character"),
+function(x) {
+  lines <- readLines(sam.file, n=1000)
+  take <- grep("@SQ", lines)
+  ## @SQ	SN:chr1	LN:247249719
+  ## @SQ	SN:chr2	LN:242951149
+  ## @SQ	SN:chr3	LN:199501827
+  ## @SQ	SN:chr4	LN:191273063
+  info <- lapply(strsplit(lines[take], "\t"), function(x) {
+    sapply(strsplit(x[-1], ':'), '[', 2)
+  })
+  df <- as.data.frame(do.call(rbind, info), stringsAsFactors=FALSE)
+  colnames(df) <- c('seqnames', 'length')
+  df$length <- as.integer(df$length)
+  df
+})
+
+setMethod("seqnames", c(x="character"),
+function(x) {
+  seqinfo(x)$seqnames
+})
+
+setMethod("seqlengths", c(x="character"),
+function(x) {
+  si <- seqinfo(x)
+  ret <- si$length
+  names(ret) <- ret$seqnames
+  ret
+})
 
 ################################################################################
 ## Deprecated (?)

@@ -1,9 +1,11 @@
 useDynLib(SeqTools)
 
 import(methods)
+import(Rsamtools)
 import(GenomicRanges)
 
 export(
+       smoothReads,
        toSamTable,
        combineIntoSamTagsVector
 )
