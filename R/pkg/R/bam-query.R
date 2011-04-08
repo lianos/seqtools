@@ -43,6 +43,10 @@ function(x, what=.default.bam.what, which=NULL, flag=scanBamFlag(),
 setMethod("query", c(x="BamFile"),
 function(x, what, which=NULL, flag, tag, param, max.mismatch,
          unique.only=FALSE, ...) {
+  if (!isOpen(x)) {
+    open(x)
+    on.exit(close(x))
+  }
   .aligner <- aligner(x)
 
   if (is.null(param)) {
@@ -64,10 +68,6 @@ function(x, what, which=NULL, flag, tag, param, max.mismatch,
   }
 
   bamTag(param) <- unique(c('Z0', bamTag(param)))
-  if (!isOpen(x)) {
-    open(x)
-    on.exit(close(x))
-  }
   result <- scanBam(x, param=param)
   if (.aligner == 'bwa' && unique.only) {
     result <- filterScanBamByFlag(result, filterBwaUnique, ...)
