@@ -1,0 +1,103 @@
+#!/usr/bin/env python
+import os, sys, time
+from optparse import OptionParser
+
+from seqtools import fastq, io
+
+if __name__ == '__main__':
+    usage = """usage: %prog [options] TAGFILE [OUTFILE]
+    
+    Convert a plain text file of just tags, to a fastq file.
+    """
+    
+    parser = OptionParser(usage=usage)
+    parser.add_option("-q", "--quality", dest="quality", default="/",
+                      help="The quality score to assign to the basepairs")
+    parser.add_option("-p", "--prefix", dest="prefix", default="",
+                      help="The prefix to generate tag ID's, defaults to filename.")
+    parser.add_option("-o", "--outfile", dest="outfile", default=None,
+                      help="Specify the name of the file to save to. If file" \
+                           "*.gz, it will be saved as a gzip file")
+    parser.add_option('-c', '--count_column', dest='count_column', default=-1, type=int,
+                      help="Set to a number to indicate which column in input " \
+                           "represents tag count (if any). Indexing is 1's based")
+    parser.add_option('-a', '--append', dest='append', default='',
+                      help="Used for SAGEseq -- append a restriction site prefix to reads.")
+    parser.add_option('-C', '--comment-char', dest='comment_char', default='#',
+                      help="Skip lines that start with this symbol. Default: '#'")
+    parser.add_option('-s', '--skip', dest='skip', default=0, type=int,
+                      help="Number of lines in TAGFILE to skip before processing")
+    (options, args) = parser.parse_args()
+    
+    if len(args) != 1:
+        parser.error('Input file needed')
+    infile = args[0]
+    if not os.path.isfile(infile):
+        parser.error("Cannot read tag file.")
+    infile = io.xopen(infile, 'r')
+    
+    if options.outfile is not None:
+        outfile = options.outfile
+        if os.path.isfile(outfile):
+            parser.error("Destination file already exists")
+        outfile = io.xopen(outfile, 'w')
+        close_out = True
+    else:
+        outfile = sys.stdout
+        close_out = False
+    
+    if len(options.prefix) == 0:
+        prefix = args[0]
+        to = prefix.rfind(prefix.rfind('.'))
+        if to > 0:
+            prefix = prefix[:to]
+    else:
+        prefix = options.prefix
+    
+    quality = options.quality
+    count_column = options.count_column - 1
+    has_counts = options.count_column >= 0
+    append = options.append
+    do_append = len(append) > 0
+    comment_char = options.comment_char
+    skip = options.skip
+    
+    total_reads = 0
+    written_reads = 0
+    t0 = time.time()
+    
+    for idx,tag in enumerate(infile):
+        if idx < skip:
+            continue
+        tag = tag.strip()
+        if len(tag) == 0 or tag.startswith(comment_char):
+            continue
+        
+        total_reads += 1
+        if has_counts:
+            info = tag.split()
+            tag,count = info[0], info[count_column]
+            count = int(count)
+        else:
+            count = 1
+        
+        if do_append:
+            tag = '%s%s' % (append, tag)
+        
+        qual = quality * len(tag)
+        for i in xrange(count):
+            written_reads += 1
+            tag_id = '@%s:%d/1' % (prefix, written_reads)
+            outfile.write('%s\n%s\n+\n%s\n' % (tag_id, tag, qual))
+    
+    elapsed = time.time() - t0
+    
+    infile.close()
+    
+    if close_out:
+        outfile.close()
+        sys.stdout.write("Processed %d reads.\n" % total_reads)
+        if has_counts:
+            sys.stdout.write("  Reads written: %d." % written_reads)
+        sys.stdout.write("Took %.2f seconds\n" % elapsed)
+    
