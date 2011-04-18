@@ -104,11 +104,13 @@ if __name__ == '__main__':
         report_out = sys.stderr
         to_stdout = True
 
-    trashfile = options.trashfile
-    if trashfile is not None:
+    trashfile = options.trashfile.strip()
+    if trashfile is not None and len(trashfile) > 0:
         if os.path.isfile(trashfile):
             parser.error("Trashfile already exists")
-        trasfhile = io.xopen(trashfile)
+        trashfile = io.xopen(trashfile, 'w')
+    else:
+        trashfile = None
     
     minlength = options.minlength
     colorspace = options.colorspace
@@ -147,6 +149,9 @@ if __name__ == '__main__':
 
     if not to_stdout:
         outfile.close()
+    if trashfile is not None:
+        trashfile.close()
+        
     report_out.write("Processed %d reads\n" % read_count)
     report_out.write("  Trimmed %d\n" % trimmed_count)
     report_out.write("  Trashed %d\n" % trash_count)
