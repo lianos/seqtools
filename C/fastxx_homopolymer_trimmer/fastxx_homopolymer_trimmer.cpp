@@ -38,7 +38,7 @@ const char* usage=
 "\n";
 
 // Working parameters
-char NT = "A";
+char NT = 'A';
 int min_length = 5;
 int verbose = 0;
 
@@ -51,7 +51,10 @@ int parse_program_args(int __attribute__((unused)) optind, int optc, char* optar
       if (optarg == NULL) {
         errx(1, "[-b] parameter requires an argument value");
       }
-      NT = optarg;
+      if (strlen(optarg) != 1) {
+        errx(1, "[-b] can only be a character of length 1 (A, C, G, or T)");
+      }
+      NT = optarg[0];
       break;
     
     case 'l':
@@ -74,15 +77,17 @@ int parse_program_args(int __attribute__((unused)) optind, int optc, char* optar
   return 1;
 }
 
-int parse_commandline(int argc, char* argv[]) {
-  fastx_parse_cmdline(argc, argv, 'b:l:');
-  return 1;
-}
+// int parse_commandline(int argc, char* argv[]) {
+//   fastx_parse_cmdline(argc, argv, "b:l:");
+//   return 1;
+// }
 
-int homopolymer_start(const std::string& read, const char nt);
-int homopolymer_start(const std::string& read, const char nt) {
+int homopolymer_start(const std::string& read, char nt);
+int homopolymer_start(const std::string& read, char nt) {
   int run_start = -1;
-  for (i = read.length(); i >= 0;;) {
+  int i;
+  
+  for (i = read.length(); i >= 0;) {
     if (read[i - 1] != nt) {
       break;
     }
@@ -99,7 +104,9 @@ int main(int argc, char* argv[]) {
   unsigned int bases_trimmed = 0;
   std::string read;
   
-  parse_commandline(argc, argv);
+  // parse_commandline(argc, argv);
+  fastx_parse_cmdline(argc, argv, "b:l:", parse_program_args);
+  
   fastx_init_reader(&fastx, get_input_filename(), FASTA_OR_FASTQ, ALLOW_N,
                     REQUIRE_UPPERCASE, get_fastq_ascii_quality_offset());
   fastx_init_writer(&fastx, get_output_filename(), OUTPUT_SAME_AS_INPUT,
@@ -108,7 +115,7 @@ int main(int argc, char* argv[]) {
   while (fastx_read_next_record(&fastx)) {
     reads_count++;
     skip_read = 0;
-    read = std::string(fastx.nucelotides);
+    read = std::string(fastx.nucleotides);
     axe_at = homopolymer_start(read, NT);
     
     if (axe_at != -1 && axe_at < min_length) {
