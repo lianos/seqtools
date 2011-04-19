@@ -31,8 +31,7 @@ const char* usage=
 "\n" \
 "   [-h]         = Help me help you.\n" \
 "   [-v]         = verbose: print short summary of input/output counts\n"      \
-"   [-b N]       = The basepair to hunt for and remove from 3' end of read\n"  \
-"                  Defaults to A\n"                                            \
+"   [-b N]       = The basepair-run to strip from 3' end of read [A]\n"        \
 "   [-t outfile] = The path to the file to save 'trashed' reads in. If the\n"  \
 "                  filename ends in *.gz, the file will be compressed.\n"      \
 "   [-l N]       = discard sequences shorter than N nucleotids [5]\n"          \
