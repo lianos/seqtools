@@ -5,10 +5,10 @@ all.bam.what <- c("qname", "flag", "rname", "strand", "pos", "qwidth",
                   "mapq",  "cigar","mrnm",  "mpos",   "isize", "seq",
                   "qual")
 
-.default.bam.what <- c('qname', 'strand', 'pos', 'qwidth', 'flag', 'seq',
-                       'qual')
+.default.bam.what <- c('qname', 'rname', 'strand', 'pos', 'qwidth', 'flag',
+                       'seq', 'qual')
 .default.bam.what <- all.bam.what
-
+.min.bam.what <- c('rname', 'strand', 'pos', 'qwidth')
 ##' "Handy" function to query a bam file -- dumps in default values for
 ##' \code{scanBamParams}, etc.
 ##'
@@ -33,7 +33,7 @@ all.bam.what <- c("qname", "flag", "rname", "strand", "pos", "qwidth",
 ##'
 ##' @return A list of results, as returned by \code{\link{scanBam}}
 setGeneric("query",
-function(x, what=.default.bam.what, which=NULL, flag=scanBamFlag(),
+function(x, what=.min.bam.what, which=NULL, flag=scanBamFlag(),
          tag=c('NM', 'MD'), param=NULL, max.mismatch=NULL, ...) {
   standardGeneric("query")
 })
@@ -48,6 +48,8 @@ function(x, what, which=NULL, flag, tag, param, max.mismatch,
     on.exit(close(x))
   }
   .aligner <- aligner(x)
+
+  what <- unique(union(what, .min.bam.what))
 
   if (is.null(param)) {
     param <- ScanBamParam(which=which, flag=flag, what=what)

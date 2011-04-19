@@ -1,11 +1,30 @@
 useDynLib(SeqTools)
 
 import(methods)
-import(Rsamtools)
+import(IRanges)
+import(Biostrings)
 import(GenomicRanges)
+import(Rsamtools)
+
+
+exportMethods(aligner,
+              isPaired,
+              header,
+
+              seqinfo,
+              seqnames,
+              seqlengths,
+
+              convertBwaMultimap,
+              query,
+
+              getReadsFromSequence)
 
 export(
        smoothReads,
+       smoother.readsPileup,
+
        toSamTable,
-       combineIntoSamTagsVector
+       combineIntoSamTagsVector,
+       toBwaMultimapString
 )

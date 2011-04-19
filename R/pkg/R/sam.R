@@ -26,19 +26,19 @@ toSamTable <- function(x, is.paired=FALSE, tag.prefix="tag.") {
   if (is.null(seq)) {
     seq <- rep('*', nrow(meta))
   } else {
-    seq <- ifelse(nchar(seq) == 0L, '*', as.character(seq))
+    seq <- ifelse(as.logical(nchar(seq) == 0L), '*', as.character(seq))
   }
 
   qual <- meta$qual
   if (is.null(qual)) {
     qual <- rep('*', nrow(meta))
   } else {
-    qual <- ifelse(nchar(qual) == 0L, '*', as.character(qual))
+    qual <- ifelse(as.logical(nchar(qual) == 0L), '*', as.character(qual))
   }
 
   flag <- meta$flag
   if (is.null(flag)) {
-    flag <- ifelse(strand(x) == '-', 16L, 0L)
+    flag <- ifelse(as.logical(strand(x) == '-'), 16L, 0L)
   } else {
     flag <- as.integer(meta$flag)
   }
@@ -48,7 +48,7 @@ toSamTable <- function(x, is.paired=FALSE, tag.prefix="tag.") {
   if (is.null(cigar)) {
     cigar <- paste(width(x), 'M', sep="")
   } else {
-    cigar <- ifelse(is.na(cigar) | nchar(cigar) == 0L,
+    cigar <- ifelse(as.logical(is.na(cigar) | nchar(cigar) == 0L),
                     paste(width(x), 'M', sep=""),
                     as.character(cigar))
   }
@@ -58,7 +58,7 @@ toSamTable <- function(x, is.paired=FALSE, tag.prefix="tag.") {
   if (is.null(mapq)) {
     mapq <- rep(255L, nrow(meta))
   } else {
-    mapq <- as.integer(ifelse(is.na(mapq), 255L, mapq))
+    mapq <- as.integer(ifelse(as.logical(is.na(mapq)), 255L, mapq))
   }
 
   if (!is.paired) {
@@ -67,13 +67,13 @@ toSamTable <- function(x, is.paired=FALSE, tag.prefix="tag.") {
     isize <- rep(0L, nrow(meta)) #
   } else {
     mrnm <- meta$mrnm
-    mrnm <- as.character(ifelse(is.na(mrnm), '*', mrnm))
+    mrnm <- as.character(ifelse(as.logical(is.na(mrnm)), '*', mrnm))
 
     mpos <- meta$mpos
-    mpos <- as.character(ifelse(is.na(mpos), 0L, mpos))
+    mpos <- as.character(ifelse(as.logical(is.na(mpos)), 0L, mpos))
 
     isize <- meta$isize
-    isize <- as.integer(ifelse(is.na(isize), 0L, mpos))
+    isize <- as.integer(ifelse(as.logical(is.na(isize)), 0L, mpos))
   }
 
   sam <- data.frame(qname=as.character(meta$qname), flag=flag,
@@ -82,7 +82,7 @@ toSamTable <- function(x, is.paired=FALSE, tag.prefix="tag.") {
                     seq=seq, qual=qual)
 
   sam.tags <- combineIntoSamTagsVector(meta, tag.prefix)
-  if (!is.null(tags)) {
+  if (!is.null(sam.tags)) {
     sam$tags <- sam.tags
   }
 

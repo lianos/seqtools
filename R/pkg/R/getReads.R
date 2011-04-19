@@ -55,7 +55,9 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
 
   unique.bam.query <- unique.only && is.null(args$uniqueness.map)
   bam.tag <- c('NM', 'MD', args$tag)
-  result <- query(x, which=which, flag=flag, max.mismatch=args$max.mismatch,
+
+  result <- query(x, what=meta.what, which=which, flag=flag,
+                  max.mismatch=args$max.mismatch,
                   unique.only=unique.bam.query, tag=bam.tag)[[1]]
 
   if (length(result$pos) == 0) {

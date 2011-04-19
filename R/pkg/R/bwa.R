@@ -99,7 +99,7 @@ function(x, keep, from, to, ...) {
     gr <- gr[is.best]
   }
 
-  values(gr)$flag <- as.integer(ifelse(strand(gr) == '-', 16L, 0L))
+  values(gr)$flag <- as.integer(ifelse(as.logical(strand(gr) == '-'), 16L, 0L))
 
   if (from != to) {
     ## SAM and BAM indexing are 1 and 0 based, respectively
