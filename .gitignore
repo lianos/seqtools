@@ -1,1 +1,4 @@
 bin/fastxx_*
+*.a
+*.o
+*.so
