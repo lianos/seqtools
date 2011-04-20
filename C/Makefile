@@ -1,9 +1,6 @@
-# INC_FASTX = /Users/stavros/cBio/projects/fastx_toolkit/fastx/src/libfastx
-# INC_GTEXTUTILS = /Users/stavros/cBio/projects/fastx_toolkit/gtextutils
-# LIB_GTEXTUTILS = /usr/local
-
-INC_FASTX = /Volumes/Sequel/tools/nextgen_sequencing/FASTX-toolkit/fastx_toolkit-0.0.13
-INC_LIBGTEXTUTILS = /Volumes/Sequel/tools/nextgen_sequencing/FASTX-toolkit/fastx_toolkit-0.0.13
+# This assumes that libgtextutils, fastx-toolkit and their header files
+# are in an "accessible" place, see:
+# https://github.com/lianos/seqtools/wiki/FASTX-toolkit-Extensions
 CFLAGS = -Wall -I. -L./sequtils -lsequtils -lgtextutils -lfastx
 CC = g++
 
@@ -21,4 +18,3 @@ clean:
 	-rm sequtils/*.a
 	-rm sequtils/*.o
 
-    

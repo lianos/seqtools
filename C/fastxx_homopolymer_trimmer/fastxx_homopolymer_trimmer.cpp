@@ -4,7 +4,7 @@
 // Use it to strip stretches of homopolymers at the end of a sequence.
 // 
 // To install:
-//   * Ensure that gtestutils and fastx is installed
+//   * Ensure that gtextutils and fastx is installed
 //     libgtextutils.* will be installed into /usr/local/lib
 //     
 //   + Create /usr/local/include/fastx
