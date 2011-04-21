@@ -140,6 +140,9 @@ int main(int argc, char* argv[]) {
   }
   
   while (fastx_read_next_record(&fastx)) {
+    if (save_trash) {
+      fastx_read_next_record(&trashx);
+    }
     reads_count++;
     skip_read = 0;
     read = std::string(fastx.nucleotides);
@@ -157,7 +160,6 @@ int main(int argc, char* argv[]) {
     if (skip_read) {
       trashed_count++;
       if (save_trash) {
-        fastx_read_next_record(&trashx);
         fastx_write_record(&trashx);
       }
     } else {

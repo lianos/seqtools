@@ -45,6 +45,9 @@ def trim_homopolymers(read, regex, side='right', colorspace=False,
     return read
 
 if __name__ == '__main__':
+    print "=== Use fastxx_homopolymer_trimmer ==="
+    sys.exit(0)
+    
     usage = """usage: %prog [options] FASTQ
 
     Trim homopolymers off of ends of reads. If FASTQ is "-" then the program
