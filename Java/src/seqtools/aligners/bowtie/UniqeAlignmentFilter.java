@@ -14,5 +14,5 @@ import net.sf.samtools.SAMRecord;
  */
 public class UniqueAlignmentFilter {
     
-    AlignmentFile file;
+  AlignmentFile file;
 }
