@@ -13,3 +13,5 @@ setGeneric("aligner", function(x, ...) standardGeneric("aligner"))
 setGeneric("isPaired", function(x, ...) standardGeneric("isPaired"))
 
 setGeneric("header", function(x, ...) standardGeneric("header"))
+
+setGeneric("swapStrand", function(x, ...) standardGeneric("swapStrand"))

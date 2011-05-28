@@ -6,7 +6,6 @@ import(Biostrings)
 import(GenomicRanges)
 import(Rsamtools)
 
-
 exportMethods(aligner,
               isPaired,
               header,
@@ -18,7 +17,8 @@ exportMethods(aligner,
               convertBwaMultimap,
               query,
 
-              getReadsFromSequence)
+              getReadsFromSequence,
+              swapStrand)
 
 export(
        smoothReads,

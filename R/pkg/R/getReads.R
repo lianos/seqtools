@@ -1,9 +1,12 @@
 ## Fetch reads straight from a BAM file -- no SeqStore or BSgenome.*
 ## necessary
+##
+## Some stranded protocols read the library from 3' -> 5' direction.
+## If this is the case, set flip.reads=TRUE
 setGeneric("getReadsFromSequence",
 function(x, seqname, start=NULL, end=NULL, strand=NULL, unique.only=TRUE,
          smooth.by=NULL, with.sequence=FALSE, with.quality=FALSE,
-         meta.what=c("flag"), ...) {
+         meta.what=c("flag"), flip.reads=FALSE, ...) {
   standardGeneric("getReadsFromSequence")
 })
 
@@ -16,10 +19,13 @@ function(x, seqname, start=NULL, end=NULL, strand=NULL, unique.only=TRUE,
 
 setMethod("getReadsFromSequence", c(x="BamFile"),
 function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
-         with.quality, meta.what, ...) {
+         with.quality, meta.what, flip.reads, ...) {
   args <- list(...)
   verbose <- checkVerbose(...)
   trace <- checkTrace(...)
+  if (is.null(flip.reads)) {
+    flip.reads <- FALSE
+  }
 
   if (trace) cat("getReadsFromSequence")
 
@@ -44,6 +50,9 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
 
   ## Determine FLAG
   if (!is.null(strand)) {
+    if (flip.reads) {
+      strand <- swapStrand(strand)
+    }
     if (strand %in% c('-', -1)) {
       flag <- scanBamFlag(isMinusStrand=TRUE)
     } else {
@@ -88,10 +97,14 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
     pair.id <- rep(1L, length(result$pos))
   }
 
+  strands <- result$strand
+  if (flip.reads) {
+    strands <- swapStrand(strands)
+  }
+
   reads <- GRanges(seqnames=seqname,
                    ranges=IRanges(start=result$pos, width=result$qwidth),
-                   strand=result$strand,
-                   pair.id=pair.id)
+                   strand=strands, pair.id=pair.id)
 
   ## Adding more metadata to the reads from BAM file, as requested by caller
   ## (did they want the sequence, too?)
@@ -112,12 +125,18 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
     values(reads)[[name]] <- result[[name]]
   }
 
+  if (flip.reads && ('flag' %in% colnames(values(reads)))) {
+    values(reads)$flag <- bitXor(values(reads)$flag, 16L)
+  }
+
   for (tag.name in names(result$tag)) {
     values(reads)[[paste('tag', tag.name, sep=".")]] <- result$tag[[tag.name]]
   }
 
   ## Apply smoothers to data
-  reads <- smoothReads(reads, smooth.by=smooth.by, ...)
+  if (!is.null(smooth.by) && length(smooth.by) > 0L) {
+    reads <- smoothReads(reads, smooth.by=smooth.by, ...)
+  }
 
   if (verbose) {
     cat("  SeqTools::getReadsFromSequence took",
