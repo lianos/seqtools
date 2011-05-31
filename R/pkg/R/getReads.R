@@ -77,7 +77,7 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
   ## the chromosome
   end.around <- which(is.na(result$pos))
 
-  if gd(length(end.around) > 0) {
+  if (length(end.around) > 0) {
     is.tag <- which(names(result) == 'tag')
     if (length(is.tag) > 0) {
       tag <- result[[is.tag]]
