@@ -66,7 +66,7 @@ function(x, what, which=NULL, flag, tag, param, max.mismatch,
     ## X1 : number of suboptimal hits
     ## XT : Type: Unique/Repeat/N/Mate-sw
     ## XA : Alternative hits: (chr,pos,CIGAR,NM;)*
-    bamTag(param) <- c('Z0', 'X0', 'X1', 'XT', 'XA', bamTag(param))
+    bamTag(param) <- c('X0', 'X1', 'XT', 'XA', bamTag(param))
   }
 
   bamTag(param) <- unique(c('Z0', bamTag(param)))
@@ -141,6 +141,3 @@ filterByMismatchTag <- function(tag.list, max.mismatch=1L, ...) {
     cleaned
   })
 }
-
-
-

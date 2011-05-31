@@ -4,7 +4,7 @@
 ## Some stranded protocols read the library from 3' -> 5' direction.
 ## If this is the case, set flip.reads=TRUE
 setGeneric("getReadsFromSequence",
-function(x, seqname, start=NULL, end=NULL, strand=NULL, unique.only=TRUE,
+function(x, seqname, start=NULL, end=NULL, strand=NULL, unique.only=FALSE,
          smooth.by=NULL, with.sequence=FALSE, with.quality=FALSE,
          meta.what=c("flag"), flip.reads=FALSE, ...) {
   standardGeneric("getReadsFromSequence")
@@ -63,7 +63,7 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
   }
 
   unique.bam.query <- unique.only && is.null(args$uniqueness.map)
-  bam.tag <- c('NM', 'MD', args$tag)
+  bam.tag <- unique(c('NM', 'MD', args$tag))
 
   result <- query(x, what=meta.what, which=which, flag=flag,
                   max.mismatch=args$max.mismatch,
@@ -77,7 +77,7 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
   ## the chromosome
   end.around <- which(is.na(result$pos))
 
-  if (length(end.around) > 0) {
+  if gd(length(end.around) > 0) {
     is.tag <- which(names(result) == 'tag')
     if (length(is.tag) > 0) {
       tag <- result[[is.tag]]
