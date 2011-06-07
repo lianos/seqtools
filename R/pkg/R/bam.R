@@ -1,6 +1,10 @@
 setMethod("header", c(x="BamFile"),
-function(x, ...) {
-  scanBamHeader(path(x))
+function(x, as.df=FALSE, ...) {
+  h <- scanBamHeader(path(x))
+  ## if (as.df) {
+  ##   dfs <- lapply(h)
+  ## }
+  h
 })
 
 setMethod("isPaired", c(x="BamFile"),
