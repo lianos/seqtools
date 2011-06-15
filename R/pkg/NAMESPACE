@@ -18,7 +18,12 @@ exportMethods(aligner,
               query,
 
               getReadsFromSequence,
-              swapStrand)
+              swapStrand,
+
+              ## GenomicRanges
+              order,
+              sort
+              )
 
 export(
        smoothReads,
@@ -26,5 +31,11 @@ export(
 
        toSamTable,
        combineIntoSamTagsVector,
-       toBwaMultimapString
+       toBwaMultimapString,
+
+       filterBamThrough,
+
+       ## BSgenome
+       bsgSamHeader,
+
 )
