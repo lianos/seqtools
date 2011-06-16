@@ -36,6 +36,5 @@ export(
        filterBamThrough,
 
        ## BSgenome
-       bsgSamHeader,
-
+       bsgSamHeader
 )
