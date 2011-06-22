@@ -1,3 +1,23 @@
+setGeneric("transform", function(`_data`, ...) standardGeneric("transform"),
+           useAsDefault=function(`_data`, ...) base::transform)
+##' transform function for DataFrame objects that behaves like the one for
+##' data.frames
+setMethod("transform", "DataFrame", function(`_data`, ...) {
+  e <- eval(substitute(list(...)), `_data`, parent.frame())
+  tags <- names(e)
+  inx <- match(tags, names(`_data`))
+  matched <- !is.na(inx)
+  if (any(matched)) {
+    for (cname in tags[matched]) {
+      `_data`[[cname]] <- e[[cname]]
+    }
+  }
+  if (!all(matched)) {
+    `_data` <- do.call("DataFrame", c(list(`_data`), e[!matched]))
+  }
+  `_data`
+})
+
 ##' @nord
 checkVerbose <- function(...) {
   verbose <- list(...)$verbose
