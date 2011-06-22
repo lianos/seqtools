@@ -27,6 +27,11 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
     flip.reads <- FALSE
   }
 
+  if (!isOpen(x)) {
+    open(x)
+    on.exit(close(x))
+  }
+
   if (trace) cat("getReadsFromSequence")
 
   start.time <- as.numeric(Sys.time())
@@ -153,4 +158,36 @@ function(x, seqname, start=NULL, end=NULL, strand=NULL, unique.only=TRUE,
   getReadsFromSequence(BamFile(x), seqname, start, end, strand, unique.only,
                        smooth.by, meta.what=c('flag'), ...)
 })
+
+##' Returns all of the reads from a bamfile
+##'
+##' @param x BamFile, or path to one
+##' @param which.seqnames A character vector indicating which seqnamnes to get
+##' reads from, \code{NULL} for all.
+setGeneric("getAllReads", function(x, which.seqnames=NULL, ...) {
+  standardGeneric("getAllReads")
+})
+
+setMethod("getAllReads", c(x="character"),
+function(x, which.seqnames, ...) {
+  getAllReads(BamFile(x), which.seqnames, ...)
+})
+
+setMethod("getAllReads", c(x="BamFile"),
+function(x, which.seqnames, ...) {
+  if (is.null(which.seqnames)) {
+    which.seqnames <- seqlevels(x)
+  }
+  if (!isOpen(x)) {
+    open(x)
+    on.exit(close(x))
+  }
+  all.reads <- lapply(which.seqnames, function(chr) {
+    getReadsFromSequence(x, chr, ...)
+  })
+  suppressWarnings(do.call(c, unname(all.reads)))
+})
+
+
+
 
