@@ -14,7 +14,15 @@ function(x, ...) {
   FALSE
 })
 
+##' @importFrom GenomicRanges seqnames
 setMethod("seqnames", c(x="BamFile"),
+function(x) {
+  names(seqlengths(x))
+})
+
+
+##' @importFrom GenomicRanges seqlevels
+setMethod("seqlevels", c(x="BamFile"),
 function(x) {
   names(seqlengths(x))
 })
