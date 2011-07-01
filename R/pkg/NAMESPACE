@@ -17,12 +17,16 @@ exportMethods(aligner,
               convertBwaMultimap,
               query,
 
+              getAllReads,
               getReadsFromSequence,
               swapStrand,
 
               ## GenomicRanges
               order,
-              sort
+              sort,
+
+              ## DataFrame
+              transform
               )
 
 export(
