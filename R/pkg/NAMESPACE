@@ -2,9 +2,13 @@ useDynLib(SeqTools)
 
 import(methods)
 import(IRanges)
-import(Biostrings)
 import(GenomicRanges)
+import(Biostrings)
+import(BSgenome)
 import(Rsamtools)
+import(multicore)
+import(foreach)
+import(doMC)
 
 exportMethods(aligner,
               isPaired,
@@ -45,5 +49,10 @@ export(
        countUniqueOverlaps,
 
        ## BSgenome
-       bsgSamHeader
+       bsgSamHeader,
+
+       # utilties,
+       load.it,
+       dir.exists,
+       convert.na
 )

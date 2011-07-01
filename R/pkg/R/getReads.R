@@ -153,10 +153,10 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
 
 setMethod("getReadsFromSequence", c(x="character"),
 function(x, seqname, start=NULL, end=NULL, strand=NULL, unique.only=TRUE,
-         smooth.by=NULL, with.sequence=FALSE, with.quality, meta.what=NULL,
+         smooth.by=NULL, with.sequence=FALSE, with.quality, meta.what='flag',
          ...) {
   getReadsFromSequence(BamFile(x), seqname, start, end, strand, unique.only,
-                       smooth.by, meta.what=c('flag'), ...)
+                       smooth.by, meta.what=meta.what, ...)
 })
 
 ##' Returns all of the reads from a bamfile
