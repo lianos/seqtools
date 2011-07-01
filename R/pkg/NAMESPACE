@@ -25,6 +25,8 @@ exportMethods(aligner,
               order,
               sort,
 
+              quantifyOverlaps,
+
               ## DataFrame
               transform
               )
@@ -38,6 +40,9 @@ export(
        toBwaMultimapString,
 
        filterBamThrough,
+
+       assignUniqueOverlaps,
+       countUniqueOverlaps,
 
        ## BSgenome
        bsgSamHeader
