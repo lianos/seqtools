@@ -13,7 +13,7 @@ setMethod("transform", "DataFrame", function(`_data`, ...) {
     }
   }
   if (!all(matched)) {
-    `_data` <- do.call("DataFrame", c(list(`_data`), e[!matched]))
+    `_data` <- cbind(`_data`, as(e[!matched], 'DataFrame'))
   }
   `_data`
 })
