@@ -11,7 +11,7 @@ BEGIN_RCPP
     int i, j;
 
     vector<string> elt;
-    vector<vector<string> > all_tags(ntags);
+    vector< vector<string> > all_tags(ntags);
     for (i = 0; i < ntags; i++) {
         elt = Rcpp::as<vector<string> >(tag_list[i]);
         all_tags[i] = elt;
@@ -21,12 +21,12 @@ BEGIN_RCPP
     int nelts = all_tags[0].size();
     vector<string> ans(nelts);
     string current_tag, current_result;
+
     for (i = 0; i < nelts; i++) {
         first = true;
         current_result = "";
         for (j = 0; j < ntags; j++) {
             current_tag = all_tags[j][i];
-            // cout << current_tag << " ";
             if (current_tag.length() > 0) {
                 if (first) {
                     current_result = current_tag;
@@ -37,7 +37,6 @@ BEGIN_RCPP
             }
         }
         ans[i] = current_result;
-        // cout << "\n";
     }
 
     return Rcpp::wrap(ans);
