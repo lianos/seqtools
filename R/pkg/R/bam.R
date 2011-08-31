@@ -43,7 +43,7 @@ function(x, ...) {
   no.info <- sapply(info, is.null)
   if (any(no.info)) {
     warning("No aligner info for ",
-            paste(basename(names(no.info)[no.info], collapse=",")))
+            paste(basename(names(no.info)[no.info]), collapse=","))
     info <- info[!no.info]
   }
   if (length(info) == 0) {

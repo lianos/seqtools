@@ -43,12 +43,16 @@ function(x, what=.min.bam.what, which=NULL, flag=scanBamFlag(),
 setMethod("query", c(x="BamFile"),
 function(x, what, which=NULL, flag, tag, param, max.mismatch,
          unique.only=FALSE, ...) {
+  args <- list(...)
   if (!isOpen(x)) {
     open(x)
     on.exit(close(x))
   }
-  .aligner <- aligner(x)
-
+  
+  if (is.null(args$.aligner)) {
+    .aligner <- aligner(x)
+  }
+  
   what <- unique(union(what, .min.bam.what))
 
   if (is.null(param)) {
@@ -60,13 +64,15 @@ function(x, what, which=NULL, flag, tag, param, max.mismatch,
   if (is.numeric(max.mismatch)) {
     bamTag(param) <- unique(c('NM', 'CM', bamTag(param)))
   }
-
-  if (.aligner == 'bwa') {
-    ## X0 : number of best hits
-    ## X1 : number of suboptimal hits
-    ## XT : Type: Unique/Repeat/N/Mate-sw
-    ## XA : Alternative hits: (chr,pos,CIGAR,NM;)*
-    bamTag(param) <- c('X0', 'X1', 'XT', 'XA', bamTag(param))
+  
+  if (length(.aligner) == 1L) {
+    if (.aligner == 'bwa') {
+      ## X0 : number of best hits
+      ## X1 : number of suboptimal hits
+      ## XT : Type: Unique/Repeat/N/Mate-sw
+      ## XA : Alternative hits: (chr,pos,CIGAR,NM;)*
+      bamTag(param) <- c('X0', 'X1', 'XT', 'XA', bamTag(param))
+    }
   }
 
   bamTag(param) <- unique(c('Z0', bamTag(param)))
