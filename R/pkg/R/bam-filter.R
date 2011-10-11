@@ -13,6 +13,8 @@
 ##' method to tweak which reads you want to retrieve from \code{x}.
 ##' For instance \code{unique.only=TRUE} would work.
 filterBamThrough <- function(x, mask, destination, bam.strands='keep', ...) {
+  stop("Export mask to a bed file and use bedtools!")
+  
   stopifnot(is.character(x))
   if (!file.exists(x)) {
     stop("Can't read input bam file: ", x)
