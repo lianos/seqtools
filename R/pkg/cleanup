@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# for o in `find inst/include/seqtools -name "*.o"`; do rm $o; done
+
+## &> redirects error
+## rm src/.depend &> /dev/null
+
+rm src/*.o &> /dev/null
+rm src/*.so &> /dev/null
+rm -rf src-* &> /dev/null
+
