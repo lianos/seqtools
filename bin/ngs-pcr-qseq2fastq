@@ -77,13 +77,14 @@ if __name__ == '__main__':
     
     seqfile.close()
     pcrfile.close()
+    
     if close_out:
         outfile.close()
     
     sys.stderr.write('========= Summary =========\n')
     sys.stderr.write("Time taken: %.2f seconds\n" % elapsed)
     sys.stderr.write('Reads processed %d\n' % nproc)
-    sys.stderr.write('Reads kept %d\n' % nkeep)
+    sys.stderr.write('Reads kept %d [%.2f]\n' % (nkeep, nkeep / nproc))
     
     
     
