@@ -1,6 +1,7 @@
 import copy
 
 from seqtools import NGSRead, NGSSequenceSpace, NGSQuality
+from seqtools.fastq import FastqRead
 
 """
 qseq format is tab delimted with the following columns:
@@ -21,7 +22,8 @@ class QseqRead(NGSRead):
     
     def __init__(self, machine="", run=-1, lane=-1, tile=-1, x=-1,
                  y=-1, index=0, read_no=1, sequence=None, quality=None,
-                 qc=0, quality_type=NGSQuality.SANGER):
+                 qc=0, quality_type=NGSQuality.SANGER,
+                 convert_ambiguous=True):
         self.machine = machine
         self.run = int(run)
         self.lane = int(lane)
@@ -30,13 +32,15 @@ class QseqRead(NGSRead):
         self.y = int(y)
         self.index = int(index)
         self.read_no = int(read_no)
+        if convert_ambiguous:
+            sequence = sequence.replace(".", "N")
         self.sequence = sequence
         self.sequence_space=NGSSequenceSpace.BASE
         self.quality = quality
         self.quality_type=quality_type
-        self.qc = bool(qc)
+        self.qc = bool(int(qc))
         self.id = self.fastq_id()
-    
+
     @staticmethod
     def from_record(line, sep="\t", convert_ambiguous=True):
         """Generate a QseqRead from a line in a (normal) qseq file
@@ -59,7 +63,8 @@ class QseqRead(NGSRead):
         info = line.strip().split(sep)
         read = QseqRead(machine=info[0], run=info[1], lane=info[2], tile=info[3],
                         x=int(info[4]), y=info[5], index=info[6], read_no=info[7],
-                        sequence=info[8], quality=info[9], qc=info[10])
+                        sequence=info[8], quality=info[9], qc=info[10],
+                        convert_ambiguous=convert_ambiguous)
         return read
 
     def fastq_id(self):
@@ -69,13 +74,13 @@ class QseqRead(NGSRead):
           HISEQ2:171:D0DDRABXX:8:1107:10531:157270
           machine:run:???:lane:tile:x:y
         """
-        return "%s:%d:%s:%d:%d:%d:%d" % (self.machine, self.run, '???',
+        return "%s:%d:%s:%d:%d:%d:%d" % (self.machine, self.run, 'XXX',
                                          self.lane, self.tile, self.x, self.y)
 
     def to_fastq(self):
         """Convert the qseq read to fastq
         """
-        fqid = self.fastq_id()
-        return FastqRead(fqid, self.sequence, quality=self.quality,
+        
+        return FastqRead(self.id, self.sequence, quality=self.quality,
                          sequence_space=self.sequence_space,
                          quality_type=self.quality_type)

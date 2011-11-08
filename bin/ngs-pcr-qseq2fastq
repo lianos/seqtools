@@ -6,7 +6,7 @@ from optparse import OptionParser
 from itertools import izip
 
 from seqtools import fastq, io
-from seqtools.fastq import 
+from seqtools.qseq import QseqRead
 if __name__ == '__main__':
     usage = """usage: %prog [options] READS_QSEQ BARCODE_SQEQ [OUTFILE]
 
@@ -17,9 +17,12 @@ if __name__ == '__main__':
 
     parser = OptionParser(usage=usage)
     parser.add_option("-f", "--filterqc", dest="filterqc", default=False,
-                      type=bool,
+                      action="store_true",
                       help="If set, reads (or barcodes) that did not pass " \
                            "QC check are removed from the output fastq")
+    parser.add_option("-a", "--withambiguous", dest="withambiguous", default=False,
+                      action="store_true",
+                      help="If set, reads with ambiguous base calls are kept")
     (options, args) = parser.parse_args()
     
     ## Check input files
@@ -31,7 +34,8 @@ if __name__ == '__main__':
         parser.error("Cannot read sequence qseq file")
     if not os.path.isfile(pcrfile):
         parser.error("Cannot read PCR barcoded file")
-    seqfile = 
+    seqfile = io.xopen(seqfile, 'r')
+    pcrfile = io.xopen(pcrfile, 'r')
     
     ## Check output
     if len(args) == 3:
@@ -45,17 +49,29 @@ if __name__ == '__main__':
         close_out = False
     
     filterqc = options.filterqc
-        
+    withambiguous = options.withambiguous
+    
+    nproc = 0
+    nkeep = 0
     t0 = time.time()
     
-    for (idx,seqline,pcrline) in enumerate(izip(seqfile, pcrfile)):
+    for (idx,(seqline,pcrline)) in enumerate(izip(seqfile, pcrfile)):
+        nproc += 1
         seqq = QseqRead.from_record(seqline)
         pcrq = QseqRead.from_record(pcrline)
+        
+        if seqq.id != pcrq.id:
+            parser.error("Unmathed sequence ids on line %d" % idx)
         if filterqc:
             if not (seqq.qc and pcrq.qc):
                 continue
-        seqq.id = "%s:%s" % (pcrq.sequence[6:], seqq.id)
-        outfile.write(seqq.to_fastq())
+        if pcrq.sequence.find('N') >= 0:
+            continue
+        if seqq.sequence.find('N') >= 0 and not withambiguous:
+            continue
+        nkeep += 1
+        seqq.id = "%s:%s" % (seqq.id, pcrq.sequence[6:])
+        outfile.write(str(seqq.to_fastq()))
         
     elapsed = time.time() - t0
     
@@ -63,6 +79,11 @@ if __name__ == '__main__':
     pcrfile.close()
     if close_out:
         outfile.close()
+    
+    sys.stderr.write('========= Summary =========\n')
+    sys.stderr.write("Time taken: %.2f seconds\n" % elapsed)
+    sys.stderr.write('Reads processed %d\n' % nproc)
+    sys.stderr.write('Reads kept %d\n' % nkeep)
     
     
     
