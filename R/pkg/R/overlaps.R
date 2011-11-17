@@ -56,13 +56,16 @@ assignUniqueOverlaps <- function(query, subject, assign.by=c('quantify', 'fix'),
   } else {
     o <- quantifyOverlaps(query, subject, maxgap, minoverlap)
     qo <- data.table(o, key='query')
+
     qo.unique <- qo[, {
-      if (length(subject) == 1) {
+      if (length(subject) == 1L) {
         list(subject=subject)
       } else {
-        list(subject=subject[which.max(p.overlap)])
+        take <- which.max(p.overlap)
+        list(subject=subject[take])
       }
     }, by='query']
+
     ans[qo.unique$query] <- as.integer(qo.unique$subject)
   }
 

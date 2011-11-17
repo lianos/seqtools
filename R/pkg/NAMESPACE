@@ -9,6 +9,7 @@ import(Rsamtools)
 import(multicore)
 import(foreach)
 import(doMC)
+import(data.table)
 
 exportMethods(aligner,
               isPaired,
@@ -17,6 +18,7 @@ exportMethods(aligner,
               seqinfo,
               seqnames,
               seqlengths,
+              seqlevels,
 
               convertBwaMultimap,
               query,

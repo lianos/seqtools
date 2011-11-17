@@ -17,22 +17,24 @@ function(x, ...) {
 ##' @importFrom GenomicRanges seqnames
 setMethod("seqnames", c(x="BamFile"),
 function(x) {
-  names(seqlengths(x))
+  seqlevels(seqinfo(x))
 })
 
 
 ##' @importFrom GenomicRanges seqlevels
 setMethod("seqlevels", c(x="BamFile"),
 function(x) {
-  names(seqlengths(x))
+  seqlevels(seqinfo(x))
 })
 
 setMethod("seqlengths", c(x="BamFile"),
 function(x) {
-  targets <- lapply(header(x), '[[', 'targets')
-  ## TODO: Merge all values across the targets list and check that
-  ##       duplicate values have the same specified length
-  targets[[1]]
+  # 
+  # targets <- lapply(header(x), '[[', 'targets')
+  # ## TODO: Merge all values across the targets list and check that
+  # ##       duplicate values have the same specified length
+  # targets[[1]]
+  seqlengths(seqinfo(x))
 })
 
 setMethod("aligner", c(x="BamFile"),

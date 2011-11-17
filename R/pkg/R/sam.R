@@ -252,7 +252,15 @@ function(x, ...) {
 ##' @return A data.frame, with \code{$name} and \code{$length} columns
 setMethod("seqinfo", c(x="character"),
 function(x) {
-  lines <- readLines(sam.file, n=1000)
+  ext <- substring(x, nchar(x) - 2)
+  if ( ext == 'bam') {
+    return(seqinfo(BamFile(x)))
+  }
+  if (ext != 'sam') {
+    stop("seqinfo,character is only defined for sam or bam files")
+  }
+  
+  lines <- readLines(x, n=1000)
   take <- grep("@SQ", lines)
   ## @SQ	SN:chr1	LN:247249719
   ## @SQ	SN:chr2	LN:242951149
@@ -264,20 +272,22 @@ function(x) {
   df <- as.data.frame(do.call(rbind, info), stringsAsFactors=FALSE)
   colnames(df) <- c('seqnames', 'length')
   df$length <- as.integer(df$length)
-  df
+  Seqinfo(df$seqnames, df$length)
 })
 
 setMethod("seqnames", c(x="character"),
 function(x) {
-  seqinfo(x)$seqnames
+  seqlevels(seqinfo(x))
+})
+
+setMethod("seqlevels", c(x="character"),
+function(x) {
+  seqlevels(seqinfo(x))
 })
 
 setMethod("seqlengths", c(x="character"),
 function(x) {
-  si <- seqinfo(x)
-  ret <- si$length
-  names(ret) <- ret$seqnames
-  ret
+  seqlengths(seqinfo(x))
 })
 
 ################################################################################
