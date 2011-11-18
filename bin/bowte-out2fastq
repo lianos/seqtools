@@ -8,9 +8,11 @@ from seqtools import Command
 from seqtools.sequence import reverse_complement
 
 def extract_seqs(cmd):
+    infile = cmd.infile
+    outfile = cmd.outfile
     readidx = cmd.options.readidx
     nproc = 0
-    for (idx, line) in enumerate(cmd.infile):
+    for (idx, line) in enumerate(infile):
         nproc += 1
         line = line.strip().split()
         read_name = line[0]
@@ -25,7 +27,7 @@ def extract_seqs(cmd):
             seq = reverse_complement(seq)
         if readidx:
             read_name = "%s:%d" % (read_name, idx)
-        cmd.outfile.write("@%s\n%s\n+\n%s\n" % (read_name, seq, qual))
+        outfile.write("@%s\n%s\n+\n%s\n" % (read_name, seq, qual))
     cmd.add_stat('Reads processed', nproc)
 
 if __name__ == '__main__':
@@ -34,15 +36,13 @@ if __name__ == '__main__':
     Extracts the reads from a bowtie output file and creates a SAM file.
     
     We assume that only unique reads are reported here. See:
-    
         http://bowtie-bio.sourceforge.net/manual.shtml#default-bowtie-output
-    
     """
 
     parser = OptionParser(usage=usage)
     parser.add_option("-n", "--readidx", dest="readidx", default=False,
                       action="store_true",
                       help="Uniquify read name by adding :N where N = nth read")
-    cmd = Command('bowtie-out2fastq', parser, 0, 1)
-    cmd.run(extract_seqs)
+    cmd = Command(extract_seqs, parser, name='bowtie-out2fastq')
+    cmd.run()
 

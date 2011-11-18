@@ -6,7 +6,13 @@ from seqtools import io
 class Command(object):
     """Abstracts boiler plate for command line scripts.
     
-    Includes a handy abstraction to deal with input/output files/streams.
+    Code up the functionality in a function that takes a Command object as
+    its only parameter, through which it can access options and args if
+    necessary.
+     
+    Includes a handy abstraction to deal with input/output files/streams which
+    your command can write to via `Command.{infile|outfile}.write`.
+    
       + If input argument is expected, set `in_arg` to its position in the
         argument list. If this argument is missing or is "-", then stdin is read.
       + Ditto for output/stdout
@@ -16,13 +22,14 @@ class Command(object):
         * -f/--force : overwrite output if already exists
     """
     
-    def __init__(self, name, parser, in_arg=0, out_arg=1):
-        """Create Command Line program
+    def __init__(self, cmd, parser, in_arg=0, out_arg=1, name='Command'):
+        """Create Command Line program from a processing function `cmd`
         
         set in_arg,out_arg to None if you do not want to process an
         input/output file
         
         """
+        self.cmd = cmd
         self.name = name
         self.to_stdout = False
         self.from_stdin = False
@@ -81,9 +88,9 @@ class Command(object):
     def add_stat(self, name, value):
         self.stats.append((name, value))
 
-    def run(self, what):
+    def run(self):
         t0 = time.time()
-        what(self)
+        self.cmd(self)
         elapsed = time.time() - t0
 
         if self.infile is not None and not self.from_stdin:
