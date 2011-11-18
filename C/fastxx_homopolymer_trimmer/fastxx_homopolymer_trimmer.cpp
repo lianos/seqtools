@@ -237,10 +237,11 @@ int main(int argc, char* argv[]) {
 
   // Print verbose report
   if (verbose_flag()) {
-    fprintf(get_report_file(), "Number of reads processed: %d\n", reads_count);
-    fprintf(get_report_file(), "Number of reads trashed: %d\n", trashed_count);
-    fprintf(get_report_file(), "Number of reads trimmed: %d\n", trimmed_count);
-    fprintf(get_report_file(), "Number of bases trimmed: %d\n", bases_trimmed);
+    fprintf(get_report_file(), "Reads processed: %d\n", reads_count);
+    fprintf(get_report_file(), "Reads left: %d\n", reads_count - trashed_count);
+    fprintf(get_report_file(), "Reads trashed: %d\n", trashed_count);
+    fprintf(get_report_file(), "Reads trimmed: %d\n", trimmed_count);
+    fprintf(get_report_file(), "Bases trimmed: %d\n", bases_trimmed);
   }
 
   return 0;

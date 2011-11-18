@@ -7,7 +7,14 @@
 
 How to handle PHRED/Solexa/Illumina scores
 http://lists.open-bio.org/pipermail/biopython-dev/2009-February/005386.html
+
+Phred offsets for common scores:
+    Sanger              33
+    Illumina 1.9+       33
+    Illumina pre 1.9    64
+
 """
+
 #import numpy as np
 from seqtools.utilities.enum import Enum
 
@@ -16,6 +23,36 @@ from seqtools.utilities.enum import Enum
 
 NGSQuality = Enum('UNKNOWN', 'SOLEXA', 'ILLUMINA', 'SANGER', 'SOLID')
 NGSQualityEncoding = Enum('ASCII', 'INTEGER')
+NGSQualityBaseOffset = {
+    'ILLUMINA' : 33,
+    'SANGER' : 33,
+    'SOLEXA' : 64,
+    'ILLUMINA_OLD' : 64
+}
+
+## Reference for converting qualities:
+## http://jumpgate.caltech.edu/wiki/QSeq
+## Qualities are assumed to be ASCII-encoded as chr(qual + base)
+try:
+    import numpy
+    def convert_quality(qual, inbase=NGSQualityBaseOffset['SOLEXA'],
+                        outbase=NGSQualityBaseOffset['SANGER']):
+        if inbase == outbase:
+            return qual
+        quality = numpy.asarray(qual, 'c')
+        quality.dtype = numpy.uint8
+        quality -= inbase - outbase
+        quality.dtype = '|S1'
+        return quality.tostring()
+
+except ImportError:
+    def convert_quality(qual, inbase=NGSQualityBaseOffset['SOLEXA'],
+                        outbase=NGSQualityBaseOffset['SANGER']):
+        if inbase == outbase:
+            return qual
+        quality = (chr(ord(x) - (inbase - outbase)) for x in qual)
+        return ''.join(quality)
+
 class QualityMatrix(dict):
     """Store quality score observations in a space efficient fashion.
     
