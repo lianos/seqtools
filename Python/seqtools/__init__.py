@@ -5,6 +5,7 @@
 """
 from seqtools.reads import NGSRead, NGSSequenceSpace
 from seqtools.qualities import NGSQuality, NGSQualityEncoding, QualityMatrix
+from seqtools.cmdline import Command
 
 # __all__ = ['fasta', 'solid']
 

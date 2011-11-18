@@ -4,13 +4,12 @@ from optparse import OptionParser
 from seqtools import io
 
 class Command(object):
-    """Abstracts boiler plate for producing an output from one input.
+    """Abstracts boiler plate for command line scripts.
     
-    If input (first argument) is missing or "-" reads stdin
-    If output (seond argument) is misgin or "-" writes to sdout
-    
-    We assume that the infile argument always comes immediately before output.
-    Takes care of checking input files / streams etc.
+    Includes a handy abstraction to deal with input/output files/streams.
+      + If input argument is expected, set `in_arg` to its position in the
+        argument list. If this argument is missing or is "-", then stdin is read.
+      + Ditto for output/stdout
     
     Command line options added automatically:
         * -v/--verbose : control verbosity
@@ -86,13 +85,13 @@ class Command(object):
         t0 = time.time()
         what(self)
         elapsed = time.time() - t0
-        report = sys.stderr
-        
-        if not self.to_stdout:
-            report = sys.stdout
-            self.outfile.close()
-        if not self.from_stdin:
+
+        if self.infile is not None and not self.from_stdin:
             self.infile.close()
+        if self.outfile is not None and not self.to_stdout:
+            self.outfile.close()
+        
+        report = sys.stderr if self.to_stdout else sys.stdout
         
         report.write('\n')
         report.write('========== ' + self.name + ' Finished ==========\n')
