@@ -8,7 +8,7 @@ from itertools import izip
 from seqtools import fastq, io
 from seqtools.qseq import QseqRead
 if __name__ == '__main__':
-    usage = """usage: %prog [options] READS_QSEQ BARCODE_SQEQ [OUTFILE]
+    usage = """usage: %prog [options] READS_QSEQ BARCODE_QSEQ [OUTFILE]
 
     Combine qseq files from pcr-barcoded experiment into a FASTQ file.
     
