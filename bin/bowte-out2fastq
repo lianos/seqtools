@@ -45,4 +45,4 @@ if __name__ == '__main__':
                       help="Uniquify read name by adding :N where N = nth read")
     cmd = Command('bowtie-out2fastq', parser, 0, 1)
     cmd.run(extract_seqs)
-    
+
