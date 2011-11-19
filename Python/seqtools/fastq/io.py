@@ -2,7 +2,12 @@ from seqtools.fastq import FastqRead
 from seqtools.io import xopen
 
 def parse(fastq, *args, **kwargs):
-    fh = xopen(fastq, 'r')
+    if isinstance(fastq, str):
+        fh = xopen(fastq, 'r')
+        do_close = True
+    else:
+        fh = fastq
+        do_close = False
     record = None
     for idx,line in enumerate(fh):
         line = line.strip()
@@ -17,4 +22,5 @@ def parse(fastq, *args, **kwargs):
             record.optional_id = line[1:]
         else:
             record.quality = line
-    fh.close()
+    if do_close:
+        fh.close()
