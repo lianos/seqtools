@@ -10,6 +10,8 @@ class FastqRead(NGSRead):
                  quality_type=NGSQuality.SANGER):
         super(FastqRead, self).__init__(id, sequence, quality, sequence_space,
                                         quality_type)
+        if self.quality is None:
+            self.quality = 'I' * len(self.sequence)
         self.optional_id=optional_id
     
     def to_basespace(self):

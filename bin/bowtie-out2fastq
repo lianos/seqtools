@@ -11,9 +11,9 @@ def extract_seqs(cmd):
     infile = cmd.infile
     outfile = cmd.outfile
     readidx = cmd.options.readidx
-    nproc = 0
+    nreads = 0
     for (idx, line) in enumerate(infile):
-        nproc += 1
+        nreads += 1
         line = line.strip().split()
         read_name = line[0]
         strand = line[1]
@@ -28,7 +28,7 @@ def extract_seqs(cmd):
         if readidx:
             read_name = "%s:%d" % (read_name, idx)
         outfile.write("@%s\n%s\n+\n%s\n" % (read_name, seq, qual))
-    cmd.add_stat('Reads processed', nproc)
+    cmd.add_stat('Reads processed', nreads)
 
 if __name__ == '__main__':
     usage = """usage: %prog [options] INPUT [OUTFILE]

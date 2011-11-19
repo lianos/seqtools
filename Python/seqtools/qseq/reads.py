@@ -80,7 +80,12 @@ class QseqRead(NGSRead):
     def to_fastq(self):
         """Convert the qseq read to fastq
         """
-        
         return FastqRead(self.id, self.sequence, quality=self.quality,
                          sequence_space=self.sequence_space,
                          quality_type=self.quality_type)
+    
+    def __str__(self):
+        out = "%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%s\t%s\t%d\n" % \
+              (self.machine, self.fun, self.lane, self.tile, self.x, self.y,
+               self.index, self.read_no, self.sequence, self.quality)
+        return out

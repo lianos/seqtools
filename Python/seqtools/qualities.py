@@ -23,20 +23,37 @@ from seqtools.utilities.enum import Enum
 
 NGSQuality = Enum('UNKNOWN', 'SOLEXA', 'ILLUMINA', 'SANGER', 'SOLID')
 NGSQualityEncoding = Enum('ASCII', 'INTEGER')
+
 NGSQualityBaseOffset = {
-    'ILLUMINA' : 33,
-    'SANGER' : 33,
-    'SOLEXA' : 64,
-    'ILLUMINA_OLD' : 64
+    'illumina' : 33,
+    'sanger' : 33,
+    'solexa' : 64,
+    'illumina_old' : 64
 }
+
+def match_phred_offset(x):
+    val = x
+    if isinstance(x, str):
+        try:
+            val = int(x)
+        except ValueError:
+            try:
+                val = NGSQualityBaseOffset[x.lower()]
+            except KeyError:
+                raise ValueError("Unknown phred base offset: " + str(x))
+    if not isinstance(val, int):
+        raise ValueError("Unknown input type for match " + str(type(val)))
+    if val not in NGSQualityBaseOffset.values():
+        raise ValueError("Unknown phred base offset: " + str(val))
+    return val
 
 ## Reference for converting qualities:
 ## http://jumpgate.caltech.edu/wiki/QSeq
 ## Qualities are assumed to be ASCII-encoded as chr(qual + base)
 try:
     import numpy
-    def convert_quality(qual, inbase=NGSQualityBaseOffset['SOLEXA'],
-                        outbase=NGSQualityBaseOffset['SANGER']):
+    def convert_quality(qual, inbase=NGSQualityBaseOffset['solexa'],
+                        outbase=NGSQualityBaseOffset['sanger']):
         if inbase == outbase:
             return qual
         quality = numpy.asarray(qual, 'c')
@@ -46,8 +63,8 @@ try:
         return quality.tostring()
 
 except ImportError:
-    def convert_quality(qual, inbase=NGSQualityBaseOffset['SOLEXA'],
-                        outbase=NGSQualityBaseOffset['SANGER']):
+    def convert_quality(qual, inbase=NGSQualityBaseOffset['solexa'],
+                        outbase=NGSQualityBaseOffset['sanger']):
         if inbase == outbase:
             return qual
         quality = (chr(ord(x) - (inbase - outbase)) for x in qual)

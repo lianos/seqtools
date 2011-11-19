@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+from __future__ import division
+
+from optparse import OptionParser
+
+from seqtools import NGSQualityBaseOffset
+from seqtools import Command
+from seqtools.qualities import convert_quality
+
+from seqtools import fastq
+from seqtools import qseq
+
+def do_convert(cmd):
+    if cmd.options.format == "fastq":
+        parse = fastq.parse
+    else:
+        raise "Only do fastq for now"
+    inoff = cmd.options.inoff
+    outoff = cmd.options.outoff
+    write = cmd.outfile.write
+    for idx,read in enumerate(parse(cmd.infile)):
+        read.quality = convert_quality(read.quality, inoff, outoff)
+        write(str(read))
+
+if __name__ == '__main__':
+    usage = """usage: %prog [options] INPUT [OUTFILE]
+    
+    Converts quality scores
+    """
+
+    parser = OptionParser(usage=usage)
+    parser.add_option('-f', '--format', default="fastq",
+                      help="Format of input file")
+    parser.add_option('-b', '--inoff', default=NGSQualityBaseOffset['SOLEXA'],
+                      type="int",
+                      help="Base offset of input quals [SOLEXA = 64]")
+    parser.add_option('-B', '--outoff', default=NGSQualityBaseOffset['SANGER'],
+                      type="int",
+                      help="Base offset of output quals [SANGER = 33]")
+    cmd = Command(do_convert, parser, name='ngs-convert-quals')
+    cmd.run()
+

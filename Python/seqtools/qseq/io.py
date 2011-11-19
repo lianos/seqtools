@@ -23,6 +23,5 @@ def parse(qseq, *args, **kwargs):
     fh = xopen(qseq, 'r')
     record = None
     for idx,line in enumerate(fh):
-        qseq = QseqRead.from_record(line)
-        
-        
+        yield QseqRead.from_record(line)
+    fh.close()

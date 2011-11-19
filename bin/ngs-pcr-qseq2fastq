@@ -7,6 +7,8 @@ from itertools import izip
 
 from seqtools import fastq, io
 from seqtools.qseq import QseqRead
+from seqtools.qualties import convert_quality
+
 if __name__ == '__main__':
     usage = """usage: %prog [options] READS_QSEQ BARCODE_QSEQ [OUTFILE]
 
@@ -16,6 +18,9 @@ if __name__ == '__main__':
     """
 
     parser = OptionParser(usage=usage)
+    parser.add_option("-I", dest="convert_old_illumina", default=False,
+                      action='store_true',
+                      help="If QSEQ file phred scores are offset 64, use this")
     parser.add_option("-f", "--filterqc", dest="filterqc", default=False,
                       action="store_true",
                       help="If set, reads (or barcodes) that did not pass " \
@@ -50,6 +55,7 @@ if __name__ == '__main__':
     
     filterqc = options.filterqc
     withambiguous = options.withambiguous
+    convertq = options.convert_old_illumina
     
     nproc = 0
     nkeep = 0
@@ -71,6 +77,10 @@ if __name__ == '__main__':
             continue
         nkeep += 1
         seqq.id = "%s:%s" % (seqq.id, pcrq.sequence[6:])
+        
+        if convertq:
+            seqq.quality = convert_quality(seqq.quality, NGSQualityBaseOffset['SOLEXA'],
+                                           NGSQualityBaseOffset['SANGER'])
         outfile.write(str(seqq.to_fastq()))
         
     elapsed = time.time() - t0

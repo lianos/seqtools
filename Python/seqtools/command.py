@@ -43,7 +43,7 @@ class Command(object):
         self.__init_file_streams(in_arg, out_arg)
     
     def __process_parser(self, parser):
-        parser.add_option('-f', '--force', dest="force", default=False,
+        parser.add_option('-F', '--force', dest="force", default=False,
                           action="store_true", help="Ignore any precautions")
         parser.add_option("-v", "--verbose", dest="verbose", default=False,
                           action="store_true", help="Make some noise")
@@ -59,7 +59,7 @@ class Command(object):
             else:
                 self.infile = self.args[in_arg]
                 if not os.path.isfile(self.infile):
-                    parser.error("Cannot read input file: " + self.infile)
+                    self.error("Cannot read input file: " + self.infile)
                 self.infile = io.xopen(self.infile, 'r')
                 self.from_stdin = False
 
@@ -98,13 +98,13 @@ class Command(object):
         if self.outfile is not None and not self.to_stdout:
             self.outfile.close()
         
-        report = sys.stderr if self.to_stdout else sys.stdout
-        
-        report.write('\n')
-        report.write('========== ' + self.name + ' Finished ==========\n')
-        report.write('Elapsed time:  %.2f seconds\n' % elapsed)
-        for (name,val) in self.stats:
-            report.write('%s: %s\n' % (name, val))
-        report.write("\n")
+        if self.options.verbose:
+            report = sys.stderr if self.to_stdout else sys.stdout
+            report.write('\n')
+            report.write('========== ' + self.name + ' Finished ==========\n')
+            report.write('Elapsed time:  %.2f seconds\n' % elapsed)
+            for (name,val) in self.stats:
+                report.write('%s: %s\n' % (name, val))
+            report.write("\n")
     
 # END : Class Command

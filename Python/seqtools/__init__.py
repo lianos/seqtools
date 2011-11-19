@@ -4,8 +4,14 @@
 
 """
 from seqtools.reads import NGSRead, NGSSequenceSpace
-from seqtools.qualities import NGSQuality, NGSQualityEncoding, QualityMatrix
+from seqtools.qualities import NGSQuality, NGSQualityEncoding, QualityMatrix, NGSQualityBaseOffset
 from seqtools.command import Command
+
+import qualities
+import fastq
+import fasta
+import qseq
+import bowtie
 
 # __all__ = ['fasta', 'solid']
 

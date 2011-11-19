@@ -33,19 +33,25 @@ class FastaRecord(object):
             d = {"id" : id[:end-1].strip(), "description" : id[end:]}
         return d
         
-    def __init__(self, id, value="", description=""):
+    def __init__(self, id, sequence="", description=""):
         _id = FastaRecord.parse_id(id)
         if len(description) == 0:
             description = _id['description']
         self.id = _id['id']
-        self.value = value
+        self.sequence = sequence
         self.description = description
     
     def __repr__(self):
         """Basic representation of the FASTSA Record"""
         repr = "\n".join(["{'id' : '>%s %s'" % (self.id, self.description),
-                          self.value])
+                          self.sequence])
         return repr
+    
+    def __str__(self):
+        if len(description):
+            return ">%s %s\n%s\n" % (self.id, self.description, self.sequence)
+        else:
+            return ">%s\n%s" % (self.id, self.sequence)
 
 #
 from seqtools.fasta.io import parse
