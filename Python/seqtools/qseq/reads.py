@@ -86,6 +86,6 @@ class QseqRead(NGSRead):
     
     def __str__(self):
         out = "%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%s\t%s\t%d\n" % \
-              (self.machine, self.fun, self.lane, self.tile, self.x, self.y,
-               self.index, self.read_no, self.sequence, self.quality)
+              (self.machine, self.run, self.lane, self.tile, self.x, self.y,
+               self.index, self.read_no, self.sequence, self.quality, self.qc)
         return out
