@@ -1,13 +1,14 @@
+from gzip import GzipFile
 from seqtools.fastq import FastqRead
 from seqtools.io import xopen
 
-def parse(fastq, *args, **kwargs):
-    if isinstance(fastq, str):
-        fh = xopen(fastq, 'r')
-        do_close = True
-    else:
-        fh = fastq
+def parse(infile, *args, **kwargs):
+    if isinstance(infile, file) or isinstance(infile, GzipFile):
+        fh = infile
         do_close = False
+    else:
+        fh = xopen(infile, 'r')
+        do_close = True
     record = None
     for idx,line in enumerate(fh):
         line = line.strip()

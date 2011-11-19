@@ -33,7 +33,7 @@ class FastaRecord(object):
             d = {"id" : id[:end-1].strip(), "description" : id[end:]}
         return d
         
-    def __init__(self, id, sequence="", description=""):
+    def __init__(self, id, sequence="", description="", *args, **kwargs):
         _id = FastaRecord.parse_id(id)
         if len(description) == 0:
             description = _id['description']
@@ -48,10 +48,10 @@ class FastaRecord(object):
         return repr
     
     def __str__(self):
-        if len(description):
+        if len(self.description):
             return ">%s %s\n%s\n" % (self.id, self.description, self.sequence)
         else:
-            return ">%s\n%s" % (self.id, self.sequence)
+            return ">%s\n%s\n" % (self.id, self.sequence)
 
 #
 from seqtools.fasta.io import parse

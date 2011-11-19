@@ -16,6 +16,8 @@ def xopen(x, mode='r', is_gzipped=None):
             return gzip.GzipFile(fileobj=x, mode='rb')
         else:
             return x
+    if isinstance(x, gzip.GzipFile):
+        return x
     
     if not isinstance(x, str):
         raise ValueError("Don't know how to handle objects of type: " + str(type(x)))

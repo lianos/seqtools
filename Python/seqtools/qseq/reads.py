@@ -23,7 +23,7 @@ class QseqRead(NGSRead):
     def __init__(self, machine="", run=-1, lane=-1, tile=-1, x=-1,
                  y=-1, index=0, read_no=1, sequence=None, quality=None,
                  qc=0, quality_type=NGSQuality.SANGER,
-                 convert_ambiguous=True):
+                 convert_ambiguous=True, *args, **kwargs):
         self.machine = machine
         self.run = int(run)
         self.lane = int(lane)
