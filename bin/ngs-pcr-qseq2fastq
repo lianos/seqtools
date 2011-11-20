@@ -55,7 +55,10 @@ if __name__ == '__main__':
     
     filterqc = options.filterqc
     withambiguous = options.withambiguous
+    
     convertq = options.convert_old_illumina
+    inoffset = match_phred_quality('solexa')
+    outoffset = match_phred_quality('sanger')
     
     nproc = 0
     nkeep = 0
@@ -75,12 +78,13 @@ if __name__ == '__main__':
             continue
         if seqq.sequence.find('N') >= 0 and not withambiguous:
             continue
-        nkeep += 1
+
         seqq.id = "%s:%s" % (seqq.id, pcrq.sequence[6:])
-        
+
         if convertq:
-            seqq.quality = convert_quality(seqq.quality, NGSQualityBaseOffset['SOLEXA'],
-                                           NGSQualityBaseOffset['SANGER'])
+            seqq.quality = convert_quality(seqq.quality, inoffset, outoffset)
+
+        nkeep += 1
         outfile.write(str(seqq.to_fastq()))
         
     elapsed = time.time() - t0

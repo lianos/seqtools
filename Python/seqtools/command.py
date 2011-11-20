@@ -13,13 +13,17 @@ class Command(object):
     Includes a handy abstraction to deal with input/output files/streams which
     your command can write to via `Command.{infile|outfile}.write`.
     
-      + If input argument is expected, set `in_arg` to its position in the
-        argument list. If this argument is missing or is "-", then stdin is read.
-      + Ditto for output/stdout
+        * If input argument is expected, set `in_arg` to its position in the
+          argument list. If this argument is missing or is "-", then stdin is
+          read.
+        * Ditto for output/stdout
     
-    Command line options added automatically:
+    This base command consumes some command line arguments by default. Commands
+    that are built around this class must work around these arguments.
+    
         * -v/--verbose : control verbosity
-        * -f/--force : overwrite output if already exists
+        * -w/--wild    : do not warn user of possible problems, just do it.
+                         eg. overwrite output file(s) if they already exist.
     """
     
     def __init__(self, cmd, parser, in_arg=0, out_arg=1, name='Command'):
@@ -43,7 +47,7 @@ class Command(object):
         self.__init_file_streams(in_arg, out_arg)
     
     def __process_parser(self, parser):
-        parser.add_option('-F', '--force', dest="force", default=False,
+        parser.add_option('-w', '--wild', dest="wild", default=False,
                           action="store_true", help="Ignore any precautions")
         parser.add_option("-v", "--verbose", dest="verbose", default=False,
                           action="store_true", help="Make some noise")
@@ -69,9 +73,9 @@ class Command(object):
                 self.to_stdout = True
             else:
                 self.outfile = self.args[out_arg]
-                if os.path.isfile(self.outfile) and not self.options.force:
+                if os.path.isfile(self.outfile) and not self.options.wild:
                     self.error("Outfile already exists, " \
-                               "use -f/--force to overwite")
+                               "use -w/--wild to overwite")
                 self.outfile = io.xopen(self.outfile, 'w')
                 self.to_stdout = False
 

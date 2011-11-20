@@ -4,11 +4,8 @@ from __future__ import division
 
 from optparse import OptionParser
 
-from seqtools import NGSQualityBaseOffset
-from seqtools import Command
-from seqtools.qualities import convert_quality, match_phred_offset
-
 import seqtools
+from seqtools.qualities import convert_quality, match_phred_offset
 
 __parsers = {
     'fastq' : seqtools.fastq.parse,
@@ -26,8 +23,8 @@ __outcons = {
 def do_convert(cmd):
     informat = cmd.options.informat
     outformat = cmd.options.outformat
-    inoff = cmd.options.inoff
-    outoff = cmd.options.outoff
+    inoffset = cmd.options.inoffset
+    outoffset = cmd.options.outoffset
     
     parse = __parsers[informat]
     cons = __outcons[outformat]
@@ -39,8 +36,8 @@ def do_convert(cmd):
         nreads += 1
         quality = read.quality
         
-        if inoff != outoff:
-            quality = convert_quality(read.quality, inoff, outoff)
+        if inoffset != outoffset:
+            quality = convert_quality(quality, inoffset, outoffset)
             
         if outformat == informat:
             new = read
@@ -54,21 +51,27 @@ def do_convert(cmd):
 if __name__ == '__main__':
     usage = """usage: %prog [options] INPUT [OUTFILE]
     
-    Swiss army knife to convert reads from one format to another.
-    Other conversions are availabe inline as well, such as converting
-    quality scores."""
+    Swiss army knife to convert reads from one format or phred scale to
+    another.
+    
+    Single-letter command line arguments applied to the input format are
+    lowercase. The corresponding argument for the output file is in uppercase.
+    
+    If the input argument is the same as the output argument, no conversion
+    for that format/phred scale is attempted.
+    """
 
     parser = OptionParser(usage=usage)
-    parser.add_option('-i', '--informat', default="fastq",
+    parser.add_option('-f', '--informat', default="fastq",
                       help="Format of input file")
-    parser.add_option('-o', '--outformat', default="fastq",
+    parser.add_option('-F', '--outformat', default="fastq",
                       help="Format of input file")
-    parser.add_option('-b', '--inoff', default='sanger',
+    parser.add_option('-b', '--inoffset', default='sanger',
                       help="Base offset of input quals [SANGER = 33]")
-    parser.add_option('-B', '--outoff', default='sanger',
+    parser.add_option('-B', '--outoffset', default='sanger',
                       help="Base offset of output quals [SANGER = 33]")
 
-    cmd = Command(do_convert, parser, name='ngs-convert-quals')
+    cmd = seqtools.Command(do_convert, parser, name='ngs-convert-quals')
 
     if cmd.options.informat not in __parsers:
         cmd.error("Unknown input format: %s", cmd.options.informat)
@@ -76,8 +79,8 @@ if __name__ == '__main__':
         cmd.error("Unknown output format: %s", cmd.options.outformat)
     
     ## did user input in/out bases as names?
-    cmd.options.inoff = match_phred_offset(cmd.options.inoff)
-    cmd.options.outoff = match_phred_offset(cmd.options.outoff)
+    cmd.options.inoffset = match_phred_offset(cmd.options.inoffset)
+    cmd.options.outoffset = match_phred_offset(cmd.options.outoffset)
     
     cmd.run()
 

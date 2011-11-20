@@ -1,17 +1,30 @@
 """
 .. module:: qualities
    :platform: Unix, Windows
-   :synopsis: Tools to deal with (phred) quality scores fore reads
+   :synopsis: Tools to deal with (phred) quality scores for reads
 
 .. moduleauthor:: Steve Lianoglou <slianoglou@gmail.com>
 
-How to handle PHRED/Solexa/Illumina scores
-http://lists.open-bio.org/pipermail/biopython-dev/2009-February/005386.html
 
-Phred offsets for common scores:
-    Sanger              33
-    Illumina 1.9+       33
-    Illumina pre 1.9    64
+ SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS.....................................................
+ ..........................XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX......................
+ ...............................IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII......................
+ .................................JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ......................
+ LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....................................................
+ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+ |                         |    |        |                              |                     |
+33                        59   64       73                            104                   126
+
+S - Sanger        Phred+33,  raw reads typically (0, 40)
+X - Solexa        Solexa+64, raw reads typically (-5, 40)
+I - Illumina 1.3+ Phred+64,  raw reads typically (0, 40)
+J - Illumina 1.5+ Phred+64,  raw reads typically (3, 40)
+   with 0=unused, 1=unused, 2=Read Segment Quality Control Indicator (bold) 
+   (Note: See discussion above).
+L - Illumina 1.8+ Phred+33,  raw reads typically (0, 41)
+
+Notes on how to handle PHRED/Solexa/Illumina scores
+http://lists.open-bio.org/pipermail/biopython-dev/2009-February/005386.html
 
 """
 
