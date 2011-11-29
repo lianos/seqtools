@@ -15,6 +15,33 @@ function(query, subject, maxgap, minoverlap, ...) {
 
 setMethod("quantifyOverlaps", c(query="GRanges", subject="GRanges"),
 function(query, subject, maxgap, minoverlap, ...) {
+
+  ##############################################################################
+  ## TODO: Fix quantifyOverlaps to work on circular chromosomes
+  ##       Had a hell of a time chasing a bug down from a read that went
+  ##       "circular" around chrM ... fix ends of query to be no longer
+  ##       than the end of the chromosome
+  ##
+  ##       I think this error only ever happened because the reads object
+  ##       didn't have any proper values for seqlengths, so the "overhang"
+  ##       wasn't noticed.
+  seqlvls <- intersect(seqlevels(query), seqlevels(subject))
+  is.circular <- union(names(isCircular(subject))[isCircular(subject)],
+                       names(isCircular(query))[isCircular(query)])
+  is.circular <- is.circular[is.circular %in% seqlvls]
+  if (length(is.circular) > 0L) {
+    seqlens <- pmin(seqlengths(query)[is.circular],
+                    seqlengths(subject)[is.circular], na.rm=TRUE)
+    for (sname in names(seqlens)) {
+      len <- as.integer(seqlens[sname])
+      end(query[seqnames(query) == sname]) <-
+        pmin.int(end(query[seqnames(query) == sname]), len)
+      end(subject[seqnames(subject) == sname]) <-
+        pmin.int(end(subject[seqnames(subject) == sname]), len)
+    }
+  }
+  ## ---------------------------------------------------------------------------
+
   o <- findOverlaps(query, subject, maxgap, minoverlap)
   overlapped <- ranges(o, ranges(query), ranges(subject))
   p.overlap <- width(overlapped) / width(query)[queryHits(o)]
