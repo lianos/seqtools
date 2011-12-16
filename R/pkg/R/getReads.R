@@ -1,3 +1,19 @@
+setGeneric("getReads", function(x, y, ...) standardGeneric("getReads"))
+setMethod("getReads", c(x="SeqStore", y="ANY"),
+function(x, y, ...) {
+
+})
+
+setMethod("getReads", c(x="BamFile", y="ANY"),
+function(x, y, ...) {
+
+})
+
+setMethod("getReads", c(x="character", y="ANY"),
+function(x, y="ANY", ...) {
+
+})
+
 ## Fetch reads straight from a BAM file -- no SeqStore or BSgenome.*
 ## necessary
 ##
@@ -110,7 +126,7 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
   reads <- GRanges(seqnames=seqname,
                    ranges=IRanges(start=result$pos, width=result$qwidth),
                    strand=strands, pair.id=pair.id)
-                   
+
   ## Adding more metadata to the reads from BAM file, as requested by caller
   ## (did they want the sequence, too?)
   if (!is.null(meta.what)) {
@@ -125,7 +141,7 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
   }
 
   dont.add <- c('strand', 'tag', 'rname', 'pos', 'qwidth')
-  
+
   meta.what <- meta.what[!meta.what %in% dont.add]
   for (name in meta.what) {
     values(reads)[[name]] <- result[[name]]
@@ -186,9 +202,9 @@ function(x, which.seqnames, ...) {
   all.reads <- lapply(which.seqnames, function(chr) {
     getReadsFromSequence(x, chr, ...)
   })
-  
+
   all.reads <- all.reads[sapply(all.reads, function(x) !is.null(x)&length(x))]
-  
+
   ## make sure all DFs have the same column names
   keep.cols <- colnames(values(all.reads[[1]]))
   if (length(all.reads) > 1) {
@@ -196,7 +212,7 @@ function(x, which.seqnames, ...) {
       keep.cols <- intersect(keep.cols, colnames(values(all.reads[[i]])))
     }
   }
-  
+
   all.reads <- lapply(all.reads, function(r) {
     meta <- values(r)
     if (ncol(meta) != length(keep.cols)) {
@@ -205,7 +221,7 @@ function(x, which.seqnames, ...) {
     }
     r
   })
-  
+
   suppressWarnings(do.call(c, unname(all.reads)))
 })
 
