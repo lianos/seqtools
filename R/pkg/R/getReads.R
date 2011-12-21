@@ -6,7 +6,8 @@
 setGeneric("getReadsFromSequence",
 function(x, seqname, start=NULL, end=NULL, strand=NULL, unique.only=FALSE,
          smooth.by=NULL, with.sequence=FALSE, with.quality=FALSE,
-         meta.what=c("flag"), flip.reads=FALSE, ...) {
+         meta.what=c("flag"), flip.reads=FALSE, rename.seqlevels=NULL,
+         ...) {
   standardGeneric("getReadsFromSequence")
 })
 
@@ -19,7 +20,7 @@ function(x, seqname, start=NULL, end=NULL, strand=NULL, unique.only=FALSE,
 
 setMethod("getReadsFromSequence", c(x="BamFile"),
 function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
-         with.quality, meta.what, flip.reads, ...) {
+         with.quality, meta.what, flip.reads, rename.seqlevels, ...) {
   args <- list(...)
   verbose <- checkVerbose(...)
   trace <- checkTrace(...)
@@ -107,10 +108,14 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
     strands <- swapStrand(strands)
   }
 
+  if (!is.null(rename.seqlevels) && seqname %in% names(rename.seqlevels)) {
+    seqname <- rename.seqlevles[[seqname]]
+  }
+
   reads <- GRanges(seqnames=seqname,
                    ranges=IRanges(start=result$pos, width=result$qwidth),
                    strand=strands, pair.id=pair.id)
-                   
+
   ## Adding more metadata to the reads from BAM file, as requested by caller
   ## (did they want the sequence, too?)
   if (!is.null(meta.what)) {
@@ -125,7 +130,7 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
   }
 
   dont.add <- c('strand', 'tag', 'rname', 'pos', 'qwidth')
-  
+
   meta.what <- meta.what[!meta.what %in% dont.add]
   for (name in meta.what) {
     values(reads)[[name]] <- result[[name]]
@@ -155,9 +160,10 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
 setMethod("getReadsFromSequence", c(x="character"),
 function(x, seqname, start=NULL, end=NULL, strand=NULL, unique.only=TRUE,
          smooth.by=NULL, with.sequence=FALSE, with.quality, meta.what='flag',
-         ...) {
+         flip.reads,rename.seqlevels, ...) {
   getReadsFromSequence(BamFile(x), seqname, start, end, strand, unique.only,
-                       smooth.by, meta.what=meta.what, ...)
+                       smooth.by, meta.what=meta.what, flip.reads,
+                       rename.seqlevels, ...)
 })
 
 ##' Returns all of the reads from a bamfile
@@ -186,9 +192,9 @@ function(x, which.seqnames, ...) {
   all.reads <- lapply(which.seqnames, function(chr) {
     getReadsFromSequence(x, chr, ...)
   })
-  
+
   all.reads <- all.reads[sapply(all.reads, function(x) !is.null(x)&length(x))]
-  
+
   ## make sure all DFs have the same column names
   keep.cols <- colnames(values(all.reads[[1]]))
   if (length(all.reads) > 1) {
@@ -196,7 +202,7 @@ function(x, which.seqnames, ...) {
       keep.cols <- intersect(keep.cols, colnames(values(all.reads[[i]])))
     }
   }
-  
+
   all.reads <- lapply(all.reads, function(r) {
     meta <- values(r)
     if (ncol(meta) != length(keep.cols)) {
@@ -205,7 +211,7 @@ function(x, which.seqnames, ...) {
     }
     r
   })
-  
+
   suppressWarnings(do.call(c, unname(all.reads)))
 })
 
