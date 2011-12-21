@@ -1,13 +1,29 @@
+setGeneric("getReads", function(x, y, ...) standardGeneric("getReads"))
+setMethod("getReads", c(x="SeqStore", y="ANY"),
+function(x, y, ...) {
+
+})
+
+setMethod("getReads", c(x="BamFile", y="ANY"),
+function(x, y, ...) {
+
+})
+
+setMethod("getReads", c(x="character", y="ANY"),
+function(x, y="ANY", ...) {
+
+})
+
 ## Fetch reads straight from a BAM file -- no SeqStore or BSgenome.*
 ## necessary
 ##
 ## Some stranded protocols read the library from 3' -> 5' direction.
-## If this is the case, set flip.reads=TRUE
+## If this is the case, set opposite.strand=TRUE
 setGeneric("getReadsFromSequence",
 function(x, seqname, start=NULL, end=NULL, strand=NULL, unique.only=FALSE,
          smooth.by=NULL, with.sequence=FALSE, with.quality=FALSE,
-         meta.what=c("flag"), flip.reads=FALSE, rename.seqlevels=NULL,
-         ...) {
+         meta.what=c("flag"), opposite.strand=FALSE,
+         rename.seqlevels=NULL, ...) {
   standardGeneric("getReadsFromSequence")
 })
 
@@ -20,12 +36,12 @@ function(x, seqname, start=NULL, end=NULL, strand=NULL, unique.only=FALSE,
 
 setMethod("getReadsFromSequence", c(x="BamFile"),
 function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
-         with.quality, meta.what, flip.reads, rename.seqlevels, ...) {
+         with.quality, meta.what, opposite.strand, rename.seqlevels, ...) {
   args <- list(...)
   verbose <- checkVerbose(...)
   trace <- checkTrace(...)
-  if (is.null(flip.reads)) {
-    flip.reads <- FALSE
+  if (is.null(opposite.strand)) {
+    opposite.strand <- FALSE
   }
 
   if (!isOpen(x)) {
@@ -56,7 +72,7 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
 
   ## Determine FLAG
   if (!is.null(strand)) {
-    if (flip.reads) {
+    if (opposite.strand) {
       strand <- swapStrand(strand)
     }
     if (strand %in% c('-', -1)) {
@@ -104,7 +120,7 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
   }
 
   strands <- result$strand
-  if (flip.reads) {
+  if (opposite.strand) {
     strands <- swapStrand(strands)
   }
 
@@ -136,7 +152,7 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
     values(reads)[[name]] <- result[[name]]
   }
 
-  if (flip.reads && ('flag' %in% colnames(values(reads)))) {
+  if (opposite.strand && ('flag' %in% colnames(values(reads)))) {
     values(reads)$flag <- bitXor(values(reads)$flag, 16L)
   }
 
@@ -158,12 +174,11 @@ function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
 })
 
 setMethod("getReadsFromSequence", c(x="character"),
-function(x, seqname, start=NULL, end=NULL, strand=NULL, unique.only=TRUE,
-         smooth.by=NULL, with.sequence=FALSE, with.quality, meta.what='flag',
-         flip.reads,rename.seqlevels, ...) {
+function(x, seqname, start, end, strand, unique.only, smooth.by, with.sequence,
+         with.quality, meta.what, opposite.strand, rename.seqlevels, ...) {
   getReadsFromSequence(BamFile(x), seqname, start, end, strand, unique.only,
-                       smooth.by, meta.what=meta.what, flip.reads,
-                       rename.seqlevels, ...)
+                       smooth.by, with.sequence, with.quality, meta.what,
+                       opposite.strand, rename.seqlevels, ...)
 })
 
 ##' Returns all of the reads from a bamfile
