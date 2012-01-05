@@ -49,7 +49,7 @@ def do_convert(cmd):
     cmd.add_stat('Reads processed', nreads)
 
 if __name__ == '__main__':
-    usage = """usage: %prog [options] INPUT [OUTFILE]
+    usage = """usage: %prog [options] INPUT OUTFILE
     
     Swiss army knife to convert reads from one format or phred scale to
     another.
