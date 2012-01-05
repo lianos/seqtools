@@ -1,3 +1,5 @@
+from progressbar import ProgressBar
+
 def sliding_window(sequence, n=3):
     """Returns a sliding window (of width n) over a character sequence"""
     total = len(sequence) - n + 1
