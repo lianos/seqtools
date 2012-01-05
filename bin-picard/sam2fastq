@@ -22,7 +22,9 @@ usage() {
   Options:
     -h      Shows this help message and exits
     -g      Output a fastq file per read group
+            [not used -- set to default]
     -o PATH Set the output directory to PATH. Used only when output -g is set.
+            [not used -- set to default]
     -P PATH The path to the directory with the picard-tools jars. If unset
             the script will attempt to get value from PICARDTOOLS environment
             variables. If *this* is unset, then the script will fail.
@@ -37,8 +39,8 @@ PTOOLS=$PICARDTOOLS
 
 INFILE=""
 OUTFILE=""
-OUTPUT_PER_RG="false"
-OUTPUT_DIR="."
+#OUTPUT_PER_RG="false"
+#OUTPUT_DIR="."
 RE_REVERSE="true"
 GZIP=0
 XMX="2g"
@@ -51,16 +53,18 @@ do
       exit 1
       ;;
     g)
+      echo "OUTPUT_PER_RG doesn't do anything"
       OUTPUT_PER_RG="true"
       ;;
     o)
-      OUTPUT_DIR=$OPTARG
+      OUTPUT_DIR="${OPTARG}"
       ;;
     M)
-      XMX=$OPTARG
+      XMX="${OPTARG}"
       ;;
     P)
-      PTOOLS=$OPTARG
+      PTOOLS="${OPTARG}"
+      ;;
     R)
       RE_REVERSE="false"
       ;;
@@ -69,6 +73,9 @@ do
       ;;
   esac
 done
+
+## Jump to first positional argument
+shift $(($OPTIND - 1))
 
 ## Check to 
 INFILE=$1
@@ -85,22 +92,29 @@ if [ -f $OUTFILE ]; then
 fi
 
 if [ ! -d $OUTDIR ]; then
-  ehco "Output directory does not exist"
+  echo "Output directory does not exist"
   exit 1
 fi
 
-if [ ! -d $PTOOLS]; then
+if [ ! -d $PTOOLS ]; then
   echo "Use -P to set the path to the picard-tools jars, or set the"
   echo "PICARDTOOLS environment variable"
   exit 1
 fi
 
-cmd="java -Xmx${XMX} -jar ${PTOOLS}/SamToFastq.jar " \
-    "OUTPUT_DIR=${OUTPUT_DIR} "                      \
-    "OUTPUT_PER_RG=${OUTPUT_PER_RG} "                \
-    "RE_REVERSE=${RE_REVERSE} "                      \
-    "I=${INFILE} F=${OUTFILE} "                      \
-    "VALIDATION_STRINGENCY=SILENT"
+cmd="java -Xmx${XMX} -jar ${PTOOLS}/SamToFastq.jar \
+    RE_REVERSE=${RE_REVERSE}                      \
+    I=${INFILE} F=${OUTFILE}                      \
+    VALIDATION_STRINGENCY=SILENT"
+
+#     OUTPUT_PER_RG=${OUTPUT_PER_RG}
+#     OUTPUT_DIR=${OUTPUT_DIR}                      \
 
 echo $cmd
 eval $cmd
+
+if [ $GZIP -eq 1 ]; then
+  echo "Gzipping file ..."
+  gzip -v ${OUTFILE}
+fi
+
