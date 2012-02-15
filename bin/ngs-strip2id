@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+
+from __future__ import division
+
+from optparse import OptionParser
+from string import maketrans
+
+import seqtools
+from seqtools.qualities import convert_quality, match_phred_offset
+
+__parsers = {
+    'fastq' : seqtools.fastq.parse,
+    'fasta' : seqtools.fasta.parse,
+    'qseq'  : seqtools.qseq.parse,
+    'bowtie': seqtools.bowtie.parse
+}
+
+def do_strip(cmd):
+    format = cmd.options.format
+    parse = __parsers[format]
+    write = cmd.outfile.write
+    
+    tail = cmd.options.tail
+    n = cmd.options.n
+    nreads = 0
+
+    for (idx,read) in enumerate(parse(cmd.infile)):
+        nreads += 1
+        if tail:
+            barcode = read.sequence[len(read.sequence)-n:]
+            read.sequence = read.sequence[:-n]
+            read.quality = read.quality[:-n]
+        else:
+            barcode = read.sequence[:n]
+            read.sequence = read.sequence[n:]
+            read.quality = read.quality[n:]
+        read.id = "%s:%s" % (read.id, barcode)
+        write(str(read))
+    cmd.add_stat('Reads processed', nreads)
+
+if __name__ == '__main__':
+    usage = """usage: %prog [options] FASTQ_IN [OUTFILE]
+
+    Strips the leading (trailing) N basepairs from the read and adds it to the
+    read id.
+    
+    Useful for removing PCR barcodes and putting them somewhere that will
+    travel with the read after it is aligned.
+    """
+
+    parser = OptionParser(usage=usage)
+    parser.add_option('-f', '--format', default="fastq",
+                      help="Sequence formt [fastq]")
+    parser.add_option("-n", "--basepairs", dest="n", type="int", default=5,
+                      help="The number of basepairs to strip from the head of the read")
+    parser.add_option('-t', '--tail', default=False, action="store_true",
+                      help="Strip n basepairs from tail of read (defaults to head)")
+
+    cmd = seqtools.Command(do_strip, parser, name='ngs-strip2id')
+
+    if cmd.options.format not in __parsers:
+        cmd.error("Unknown input format: %s", cmd.options.informat)
+    
+    cmd.run()

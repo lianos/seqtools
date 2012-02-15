@@ -2,14 +2,17 @@ setAs("GRanges", "data.table", function(from) {
   if (length(from) == 0L) {
     return(data.table())
   }
-  as.data.table(as.data.frame(from))
+  as.data.table(as(from, 'data.frame'))
 })
 
-setAs("IRanges", "data.table", function(from) {
-  if (length(from) == 0L) {
-    return(data.table())
-  }
-  as.data.table(cbind(as.data.frame(from), as.data.frame(values(from))))
+setAs("GRanges", "data.frame", function(from) {
+  x <- lapply(as.data.frame(from), function(xx) {
+    if (is.factor(xx)) {
+      xx <- as.character(xx)
+    }
+    xx
+  })
+  as.data.frame(x, stringsAsFactors=FALSE)
 })
 
 setAs("data.table", "GRanges", function(from) {
