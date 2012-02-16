@@ -1,8 +1,8 @@
 setGeneric("getReads", function(x, y, ...) standardGeneric("getReads"))
-setMethod("getReads", c(x="SeqStore", y="ANY"),
-function(x, y, ...) {
-
-})
+# setMethod("getReads", c(x="SeqStore", y="ANY"),
+# function(x, y, ...) {
+# 
+# })
 
 setMethod("getReads", c(x="BamFile", y="ANY"),
 function(x, y, ...) {
