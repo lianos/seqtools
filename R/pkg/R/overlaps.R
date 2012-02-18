@@ -10,7 +10,7 @@ function(query, subject, maxgap, minoverlap, ...) {
   overlapped <- ranges(o, query, subject)
   p.overlap <- width(overlapped) / width(query)[queryHits(o)]
   p.overlap <- ifelse(p.overlap > 1, 1, p.overlap)
-  cbind(matchMatrix(o), p.overlap)
+  cbind(as.matrix(o), p.overlap)
 })
 
 setMethod("quantifyOverlaps", c(query="GRanges", subject="GRanges"),
@@ -46,7 +46,7 @@ function(query, subject, maxgap, minoverlap, ...) {
   overlapped <- ranges(o, ranges(query), ranges(subject))
   p.overlap <- width(overlapped) / width(query)[queryHits(o)]
   p.overlap <- ifelse(p.overlap > 1, 1, p.overlap)
-  cbind(matchMatrix(o), p.overlap)
+  cbind(as.matrix(o), p.overlap)
 })
 
 ##' Assigns each range in query to a unique range in subject.
@@ -72,7 +72,7 @@ assignUniqueOverlaps <- function(query, subject, assign.by=c('quantify', 'fix'),
       stop("subject ranges cannot overlap.")
     }
   }
-
+  fix <- match.arg(fix)
   assign.by <- match.arg(assign.by)
   ans <- rep(NA_integer_, length(query))
 
@@ -81,19 +81,13 @@ assignUniqueOverlaps <- function(query, subject, assign.by=c('quantify', 'fix'),
     o <- findOverlaps(query, subject, maxgap, minoverlap)
     ans[queryHits(o)] <- subjectHits(o)
   } else {
-    o <- quantifyOverlaps(query, subject, maxgap, minoverlap)
-    qo <- data.table(o, key='query')
+    qo <- quantifyOverlaps(query, subject, maxgap, minoverlap)
+    qo <- data.table(qo, key="queryHits") ## key by query
 
-    qo.unique <- qo[, {
-      if (length(subject) == 1L) {
-        list(subject=subject)
-      } else {
-        take <- which.max(p.overlap)
-        list(subject=subject[take])
-      }
-    }, by='query']
+    qo.unique <- qo[, list(subjectHits=subjectHits[which.max(p.overlap)]),
+                    by=key(qo)]
 
-    ans[qo.unique$query] <- as.integer(qo.unique$subject)
+    ans[qo.unique$queryHits] <- as.integer(qo.unique$subjectHits)
   }
 
   ans
@@ -127,19 +121,14 @@ countUniqueOverlaps <- function(query, subject, assign.by=c('quantify', 'fix'),
     counts <- countOverlaps(query, resize(subject, width=1, fix=fix))
   } else {
     counts <- integer(length(query))
-    qo <- data.table(quantifyOverlaps(query, subject), key='subject')
+    qo <- data.table(quantifyOverlaps(query, subject), key='subjectHits')
     if (nrow(qo) == 0L) {
       return(counts)
     }
-    qo.unique <- qo[, {
-      if (length(query) == 1) {
-        list(query=query)
-      } else {
-        list(query=query[which.max(p.overlap)])
-      }
-    }, by='subject']
-    key(qo.unique) <- 'query'
-    tally <- qo.unique[, list(count=length(query)), by='query']
+    qo.unique <- qo[, list(queryHits=queryHits[which.max(p.overlap)]),
+                    by='subjectHits']
+    key(qo.unique) <- 'queryHits'
+    tally <- qo.unique[, list(count=length(query)), by='queryHits']
     counts[tally$query] <- tally$count
   }
   counts

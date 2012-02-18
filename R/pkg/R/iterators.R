@@ -97,8 +97,8 @@ ievent.GRanges <- function(x, strand='*', min.count=1L, max.mismatch=0L,
     stop("StopIteration")
   }
 
-  mm <- data.table(matchMatrix(findOverlaps(ranges(x), event.bounds)))
-  key(mm) <- 'subject'
+  mm <- data.table(as.matrix(findOverlaps(ranges(x), event.bounds)))
+  key(mm) <- 'subjectHits'
   i <- 1L
 
   nextEl <- function() {

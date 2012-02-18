@@ -20,6 +20,8 @@ exportMethods(aligner,
               seqlengths,
               seqlevels,
 
+              getBsGenome,
+
               convertBwaMultimap,
               query,
 

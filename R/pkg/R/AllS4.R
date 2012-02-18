@@ -1,4 +1,6 @@
-##' Returns the name of the aligner used
+setGeneric("getBsGenome", function(x, ...) standardGeneric("getBsGenome"))
+
+##'  Returns the name of the aligner used
 ##' @param x A \code{\linkS4class{SeqStore}} object
 ##' @return The name of the aligner used, eg. \code{bwa}, \code{bowtie}, etc.
 setGeneric("aligner", function(x, ...) standardGeneric("aligner"))
