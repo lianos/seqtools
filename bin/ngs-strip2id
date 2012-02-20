@@ -34,7 +34,7 @@ def do_strip(cmd):
             barcode = read.sequence[:n]
             read.sequence = read.sequence[n:]
             read.quality = read.quality[n:]
-        read.id = "%s:%s" % (read.id, barcode)
+        read.id = "%s:%s" % (read.id.replace(" ", ":"), barcode)
         write(str(read))
     cmd.add_stat('Reads processed', nreads)
 
