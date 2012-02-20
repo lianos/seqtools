@@ -58,7 +58,7 @@ checkTrace <- function(...) {
 ##' @nord
 dir.exists <- function(path) {
   path <- as.character(path)
-  !is.na(file.info(path)$isdir) && file.info(path)$isdir
+  sapply(file.info(path)$isdir, isTRUE)
 }
 
 ##' Convert NA values in vectors and data.frames to a default value

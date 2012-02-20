@@ -134,6 +134,60 @@ countUniqueOverlaps <- function(query, subject, assign.by=c('quantify', 'fix'),
   counts
 }
 
+###############################################################################
+## Utility functions, courtesy of Tim Triche, Jr.
+## Example usage:
+##   (hESC.H3K4ME1 %s% hESC.P300) %u% (hESC.H3K4ME3 %s% hESC.H3K27ME3)
+
+# intersection
+setGeneric('%i%', function(x, y) standardGeneric('%i%'))
+setMethod('%i%', c('ANY','ANY'), function(x, y) {
+  intersect(x, y)
+})
+
+# union
+setGeneric('%u%', function(x, y) standardGeneric('%u%'))
+setMethod('%u%', c('ANY','ANY'), function(x, y) {
+  union(x, y)
+})
+
+# setdiff
+setGeneric('%d%', function(x, y) standardGeneric('%d%'))
+setMethod('%d%', c('ANY','ANY'), function(x, y) {
+  setdiff(x, y)
+})
+
+# subsetByOverlaps
+setGeneric('%s%', function(x, y) standardGeneric('%s%'))
+setMethod('%s%', c('GRanges','GRanges'), function(x, y) {
+  subsetByOverlaps(x, y)
+})
+
+# intersection
+setGeneric('%i%', function(x, y) standardGeneric('%i%'))
+setMethod('%i%', c('ANY','ANY'), function(x, y) {
+  intersect(x, y)
+})
+
+# union
+setGeneric('%u%', function(x, y) standardGeneric('%u%'))
+setMethod('%u%', c('ANY','ANY'), function(x, y) {
+  union(x, y)
+})
+
+# setdiff
+setGeneric('%d%', function(x, y) standardGeneric('%d%'))
+setMethod('%d%', c('ANY','ANY'), function(x, y) {
+  setdiff(x, y)
+})
+
+# subsetByOverlaps
+setGeneric('%s%', function(x, y) standardGeneric('%s%'))
+setMethod('%s%', c('GRanges','GRanges'), function(x, y) {
+  subsetByOverlaps(x, y)
+})
+
+
 test.quantifyOverlaps <- function() {
   ir.1 <- IRanges(c(1, 30, 50), width=10)
   ir.2 <- IRanges(c(2, 25, 80), width=10)
