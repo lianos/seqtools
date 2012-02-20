@@ -26,6 +26,7 @@ def do_strip(cmd):
 
     for (idx,read) in enumerate(parse(cmd.infile)):
         nreads += 1
+        rid = read.id.replace(" ", ":")
         if tail:
             barcode = read.sequence[len(read.sequence)-n:]
             read.sequence = read.sequence[:-n]
@@ -34,7 +35,7 @@ def do_strip(cmd):
             barcode = read.sequence[:n]
             read.sequence = read.sequence[n:]
             read.quality = read.quality[n:]
-        read.id = "%s:%s" % (read.id.replace(" ", ":"), barcode)
+        read.id = "%s:%s" % (rid, barcode)
         write(str(read))
     cmd.add_stat('Reads processed', nreads)
 
