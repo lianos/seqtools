@@ -52,8 +52,12 @@ export(
        assignUniqueOverlaps,
        countUniqueOverlaps,
 
+       rematchSeqinfo,
+       extractSeqinfo,
+
        ## BSgenome
        bsgSamHeader,
+       getBsGenome,
 
        # utilties,
        load.it,
