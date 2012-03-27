@@ -2,6 +2,12 @@ setMethod("getBsGenome", c(x="character"),
 function(x, organism=NULL, anno.source='UCSC', ...) {
   lib.name <- 'BSgenome.:organism:.:anno.source:.:genome:'
   if (is.null(organism)) {
+    ## TODO: Fix this nonesense of getting a BSgenome from a char string
+    # if (length(grep('canFam', organism))) {
+    #   organism <- 'Cfamiliaris'
+    # } else if (grep('rheMac', organism)) {
+    #   orgnism <- 'Mmulatta'
+    #} else {
     organism <- switch(substring(x, 1, 2),
                        hg='Hsapiens',
                        mm='Mmusculus',
@@ -9,7 +15,9 @@ function(x, organism=NULL, anno.source='UCSC', ...) {
                        dm='Dmelanogaster',
                        rn='Rnorvegicus',
                        ce='Celegans',
-                       stop("Unknown genome", x, sep=" "))
+                       ca='Cfamiliaris',
+                       rh='Mmulata',
+                       stop("Unknown genome ", x))
   }
 
   lib.name <- gsub(':organism:', organism, lib.name)
