@@ -17,6 +17,7 @@ function(x, organism=NULL, anno.source='UCSC', ...) {
                        ce='Celegans',
                        ca='Cfamiliaris',
                        rh='Mmulata',
+                       da='Drerio',
                        stop("Unknown genome ", x))
   }
 
