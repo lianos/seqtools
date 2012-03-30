@@ -106,10 +106,17 @@ toSamTable <- function(x, is.paired=FALSE, tag.prefix="tag.") {
 ##' @param .use.c Use C code for combining tags for uber quickness.
 combineIntoSamTagsVector <- function(x, tag.prefix="tag.", sep="\t", .use.c=TRUE) {
   ## Ensure that all items in data.frame/list container are the same length
-  lengths <- unique(sapply(x, length))
-  if (length(lengths) != 1L) {
-    stop("The elements in `x` aren't uniform length")
+  if (is.list(x)) {
+    lengths <- unique(sapply(x, length))
+    if (length(lengths) != 1L) {
+      stop("The elements in `x` aren't uniform length")
+    }
+  } else {
+    if (!inherits(x, 'DataFrame') && !inherits(x, "data.frame")) {
+      stop("Expected data.frame-like object for `x`")
+    }
   }
+
   tag.cols <- grep(tag.prefix, names(x), fixed=TRUE)
   if (length(tag.cols) == 0L) {
     return(NULL)
@@ -259,7 +266,7 @@ function(x) {
   if (ext != 'sam') {
     stop("seqinfo,character is only defined for sam or bam files")
   }
-  
+
   lines <- readLines(x, n=1000)
   take <- grep("@SQ", lines)
   ## @SQ	SN:chr1	LN:247249719
