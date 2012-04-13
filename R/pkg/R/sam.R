@@ -13,7 +13,8 @@
 ##' @param tag.prefix columns that who are destined to wind up in the tag fields
 ##' of the alignments must start with this prefix in order to be processed
 ##' correctly, eg: \code{tag.NM}, \code{tag.XA}, etc.
-toSamTable <- function(x, is.paired=FALSE, tag.prefix="tag.") {
+toSamTable <- function(x, is.paired=FALSE, tag.prefix="tag.",
+                       seqlens=seqlengths(x)) {
   if (!inherits(x, 'GRanges')) {
     stop("Only work on GRanges objects")
   }
@@ -79,11 +80,19 @@ toSamTable <- function(x, is.paired=FALSE, tag.prefix="tag.") {
   sam <- data.frame(qname=as.character(meta$qname), flag=flag,
                     rname=as.character(seqnames(x)), pos=start(x),
                     mapq=mapq, cigar=cigar, mrnm=mrnm, mpos=mpos, isize=isize,
-                    seq=seq, qual=qual)
+                    seq=seq, qual=qual, stringsAsFactors=FALSE)
 
   sam.tags <- combineIntoSamTagsVector(meta, tag.prefix)
   if (!is.null(sam.tags)) {
     sam$tags <- sam.tags
+  }
+
+  if (is.numeric(seqlens)) {
+    ## "@SQ\tSN:chr2L\tLN:23011544"
+    sheader <- paste("@SQ",
+                     sprintf("SN:%s", names(seqlens)),
+                     sprintf("LN:%d", seqlens), sep="\t")
+    attributes(sam) <- list(header=sheader)
   }
 
   sam
