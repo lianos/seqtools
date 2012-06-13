@@ -40,6 +40,9 @@ exportMethods(aligner,
               )
 
 export(
+       AREscore,
+       identifyAUBlocks,
+
        smoothReads,
        smoother.readsPileup,
 

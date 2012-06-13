@@ -1,6 +1,6 @@
 Package: SeqTools
 Title: Utilities for dealing with sequencing data
-Version: 0.0.3
+Version: 0.0.4
 Author: Steve Lianoglou,
 License: Artistic-2.0
 Description: Utilities to support projects using sequencing data
