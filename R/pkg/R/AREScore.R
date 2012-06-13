@@ -1,4 +1,4 @@
-## An implementation of the algorithm to score ARE's as described here:
+gd## An implementation of the algorithm to score ARE's as described here:
 ## http://arescore.dkfz.de/info.html
 ## http://www.plosgenetics.org/article/info%3Adoi%2F10.1371%2Fjournal.pgen.1002433
 
@@ -21,19 +21,30 @@ AREscore <- function(x, basal=1.0, overlapping=1.5, d1.3=0.75, d4.6=0.4,
 
   basal.score <- elementLengths(pmatches) * basal
   over.score <- elementLengths(omatches) * overlapping
-  dscores <- sapply(pmatches, function(m) {
+
+  no.cluster <- data.frame(d1.3=0, d4.6=0, d7.9=0)
+  clust <- lapply(pmatches, function(m) {
     if (length(m) < 2) {
-      return(0)
+      return(no.cluster)
     }
     wg <- width(gaps(m))
-    sum(wg <= 3) * d1.3 + sum(wg >= 4 & wg <= 6) * d4.6 +
-      sum(wg >= 7 & wg <= 9) * d7.9
+    ## sum(wg <= 3) * d1.3 + sum(wg >= 4 & wg <= 6) * d4.6 +
+    ##   sum(wg >= 7 & wg <= 9) * d7.9
+    data.frame(d1.3=sum(wg <= 3), d4.6=sum(wg >= 4 & wg <= 6),
+               d7.9=sum(wg >= 7 & wg <= 9))
   })
+  clust <- do.call(rbind, clust)
+  dscores <- clust$d1.3 * d1.3 + clust$d4.6 * d4.6 + clust$d7.9 * d7.9
 
   au.blocks <- identifyAUBlocks(x, aub.min.length, aub.p.to.start, aub.p.to.end)
   aub.score <- sum(countOverlaps(pmatches, au.blocks) * within.AU)
 
-  basal.score + over.score + dscores + aub.score
+  score <- basal.score + over.score + dscores + aub.score
+
+  ans <- DataFrame(score=score, n.pentamer=elementLengths(pmatches),
+                   n.overmer=elementLengths(omatches), au.blocks=au.blocks,
+                   n.au.blocks=elementLengths(au.blocks))
+  cbind(ans, DataFrame(clust))
 }
 
 

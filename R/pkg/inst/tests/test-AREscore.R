@@ -2,7 +2,8 @@ context("AREScore")
 
 test_that("AREscores are close", {
   load(file.path(system.file("extdata", "AREscore.verify.rda", package="SeqTools")))
-  ss <- unname(AREscore(are.seqs))
+  as <- AREscore(are.seqs)
+  ss <- as$score
   web <- values(are.seqs)$Score
   expect_equal(which(ss == 0), which(web == 0))
   ss <- ss[ss > 0]
