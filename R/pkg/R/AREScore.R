@@ -1,4 +1,4 @@
-gd## An implementation of the algorithm to score ARE's as described here:
+## An implementation of the algorithm to score ARE's as described here:
 ## http://arescore.dkfz.de/info.html
 ## http://www.plosgenetics.org/article/info%3Adoi%2F10.1371%2Fjournal.pgen.1002433
 
@@ -14,6 +14,8 @@ AREscore <- function(x, basal=1.0, overlapping=1.5, d1.3=0.75, d4.6=0.4,
     overmer <- "ATTTATTTA"
   }
 
+  pentamer <- "GGGGG"
+  overmer <- "GGGGGGG"
   x <- as(x, sprintf("%sStringSet", xtype))
 
   pmatches <- vmatchPattern(pentamer, x)
@@ -28,8 +30,6 @@ AREscore <- function(x, basal=1.0, overlapping=1.5, d1.3=0.75, d4.6=0.4,
       return(no.cluster)
     }
     wg <- width(gaps(m))
-    ## sum(wg <= 3) * d1.3 + sum(wg >= 4 & wg <= 6) * d4.6 +
-    ##   sum(wg >= 7 & wg <= 9) * d7.9
     data.frame(d1.3=sum(wg <= 3), d4.6=sum(wg >= 4 & wg <= 6),
                d7.9=sum(wg >= 7 & wg <= 9))
   })
@@ -64,7 +64,8 @@ AREscore <- function(x, basal=1.0, overlapping=1.5, d1.3=0.75, d4.6=0.4,
 identifyAUBlocks <- function(x, min.length=20, p.to.start=0.8, p.to.end=0.55) {
   xtype <- match.arg(substr(class(x), 1, 3), c("DNA", "RNA"))
   stopifnot(isSingleNumber(min.length) && min.length >= 5 && min.length <= 50)
-  stopifnot(isSingleNumber(p.to.start) && p.to.start >= 0.50 && p.to.start <= 0.95)
+  stopifnot(isSingleNumber(p.to.start) && p.to.start >= 0.50 &&
+            p.to.start <= 0.95)
   stopifnot(isSingleNumber(p.to.end) && p.to.end >= 0.20 && p.to.end <= 0.70)
   stopifnot(p.to.start > p.to.end)
 

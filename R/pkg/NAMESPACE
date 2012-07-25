@@ -51,7 +51,8 @@ export(
        toBwaMultimapString,
 
        filterBamThrough,
-
+       BAMisFirstPair,
+       
        assignUniqueOverlaps,
        countUniqueOverlaps,
 
