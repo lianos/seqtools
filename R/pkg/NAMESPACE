@@ -52,12 +52,13 @@ export(
 
        filterBamThrough,
        BAMisFirstPair,
-       
+
        assignUniqueOverlaps,
        countUniqueOverlaps,
 
        rematchSeqinfo,
        extractSeqinfo,
+       trimSeqinfo,
 
        ## BSgenome
        bsgSamHeader,
