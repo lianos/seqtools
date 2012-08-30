@@ -56,6 +56,7 @@ def do_strip(cmd):
     ## TODO: Implement tol -- maybe like bwa's quality trimmer
     
     nreads = 0
+    ntrashed = 0
     regex = re.compile("(%s+$)" % nt)
     
     for (idx,read) in enumerate(parse(cmd.infile)):
@@ -79,7 +80,10 @@ def do_strip(cmd):
         L = len(seq)
         if L > 4 and minlength > 0 and L > minlength:
             write(str(read))
+        else:
+            ntrashed += 1
     cmd.add_stat('Reads processed', nreads)
+    cmd.add_stat('Reads trashed', trashed)
 
 if __name__ == '__main__':
     parser = OptionParser(usage=usage)
