@@ -83,7 +83,7 @@ def do_strip(cmd):
         else:
             ntrashed += 1
     cmd.add_stat('Reads processed', nreads)
-    cmd.add_stat('Reads trashed', trashed)
+    cmd.add_stat('Reads trashed', ntrashed)
 
 if __name__ == '__main__':
     parser = OptionParser(usage=usage)
