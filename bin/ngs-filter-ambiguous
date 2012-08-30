@@ -3,81 +3,68 @@ from __future__ import division
 
 import os,sys
 from optparse import OptionParser
+import re
 
+import seqtools
 from seqtools import fastq, io
 
-if __name__ == '__main__':
-    usage = """usage: %prog [options] FASTQ [OUTFILE]
-    
-    Filter reads that have too many ambiguous letters (N, or .)
-    
-    To compress output on the fly, ensure that OUTFILE ends in *.gz"""
+usage = """usage: %prog [options] FASTQ [OUTFILE]
 
+Filter reads that have too many ambiguous letters (N, or .)
+
+To compress output on the fly, ensure that OUTFILE ends in *.gz"""
+
+
+__parsers = {
+    'fastq' : seqtools.fastq.parse,
+    'fasta' : seqtools.fasta.parse,
+    'qseq'  : seqtools.qseq.parse,
+    'bowtie': seqtools.bowtie.parse
+}
+
+def do_filter(cmd):
+    format = cmd.options.format
+    parse = __parsers[format]
+    write = cmd.outfile.write
+    
+    fraction = cmd.options.fraction
+    nreads = 0
+    ntrashed = 0
+    regex = re.compile("[%s]" % cmd.options.pattern.replace(".", "\."))
+    
+    for (idx, read) in enumerate(parse(cmd.infile)):
+        nreads += 1
+        nfraction = len(regex.findall(read.sequence)) / len(read)
+        if nfraction >= fraction:
+            # if trashfile is not None:
+            #     trashfile.write(str(record))
+            ntrashed += 1
+        else:
+            write(str(read))
+    
+    cmd.add_stat("Reads processed", nreads)
+    cmd.add_stat("Reads filtered", ntrashed)
+
+###
+if __name__ == '__main__':
     parser = OptionParser(usage=usage)
     parser.add_option("-f", "--fraction", dest="fraction", default=0.5, type=float,
                       help="The fraction of N's that result in junking the read")
-    parser.add_option("-N", "--N-char", dest="N", default="N",
-                      help="The value of N (could be '.') for SOLiD data")
+    parser.add_option("-F", "--format", dest="format", default="fastq",
+                      help="Format of input file")
+    parser.add_option("-p", "--pattern", dest="pattern", default="N.",
+                      help="Defaults to flag both N and . as ambiguous [N.]")
     parser.add_option("-t", "--trashfile", dest="trashfile", default=None,
                       help="Name of file to save reads that are discareded.")
     (options, args) = parser.parse_args()
-    
-    ## Deal with run options
-    N = options.N
-    if N not in ['N', '.']:
-        parser.error("Illegal value for -N")
-    
-    if options.fraction >= 1:
-        threshold = options.fraction / 100
-    else:
-        threshold = options.fraction
 
-    ############################################################################
-    ## Figure out what files we're playing with
-    ## Input
-    if len(args) < 1:
-        parser.error("Illegal number of arguments")
-    infile = args[0]
-    if not os.path.isfile(infile):
-        parser.error("Cannot read FASTQ file")
+    cmd = seqtools.Command(do_filter, parser, name='ngs-filter-ambiguous')
     
-    ## Output
-    if len(args) > 1:
-        outfile = args[1]
-        if os.path.isfile(outfile):
-            parser.error("Destination file already exists")
-        outfile = io.xopen(outfile, 'w')
-        close_out = True
-    else:
-        outfile = sys.stdout
-        close_out = False
-    
-    ## Trash?
-    if options.trashfile is not None:
-        if os.path.isfile(options.trashfile):
-            parser.error("Trashfile already exists")
-        trashfile = io.xopen(options.trashfile, 'w')
-        close_trash = True
-    else:
-        trashfile = None
-        close_trash = False
+    if cmd.options.fraction >= 1:
+        cmd.options.fraction = cmd.options.fraction / 100
 
-    ############################################################################
-    ## Get down to business
-    filtered = 0
-    total_reads = 0
-    for record in fastq.parse(infile):
-        total_reads += 1
-        nfraction = record.sequence.count('N') / len(record)
-        if nfraction > threshold:
-            if trashfile is not None:
-                trashfile.write(str(record))
-            filtered += 1
-        else:
-            outfile.write(str(record))
+    if cmd.options.format not in __parsers:
+        cmd.error("Unknown input format: %s", cmd.options.informat)
     
-    if close_out:
-        outfile.close()
-        sys.stdout.write("Filtered %d/%d reads.\n" % (filtered, total_reads))
-    if close_trash:
-        trashfile.close()
+    cmd.run()
+

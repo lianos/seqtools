@@ -8,6 +8,11 @@ from string import maketrans
 import seqtools
 from seqtools.qualities import convert_quality, match_phred_offset
 
+usage = """usage: %prog [options] INCHARS OUTCHARS INFILE OUTFILE
+
+Translates (in the unix `tr` sense of the word) nucleotides in sequences.
+"""
+
 __parsers = {
     'fastq' : seqtools.fastq.parse,
     'fasta' : seqtools.fasta.parse,
@@ -38,11 +43,6 @@ def do_translate(cmd):
     cmd.add_stat('Reads processed', nreads)
 
 if __name__ == '__main__':
-    usage = """usage: %prog [options] INCHARS OUTCHARS INFILE OUTFILE
-    
-    Translates (in the unix `tr` sense of the word) nucleotides in sequences.
-    """
-
     parser = OptionParser(usage=usage)
     parser.add_option('-f', '--format', default="fastq",
                       help="Sequence formt [fastq]")
