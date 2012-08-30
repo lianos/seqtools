@@ -43,7 +43,7 @@ def translate_match(seq):
     
     TODO: Enable CIGAR like encoding when we support tolerance > 0
     """
-    return "A%d" % nchar(seq)
+    return "A%d" % len(seq)
 
 def do_strip(cmd):
     format = cmd.options.format
@@ -52,7 +52,7 @@ def do_strip(cmd):
     
     nt = cmd.options.nucleotide
     tol = cmd.options.tolerance
-    minlength = cmd.optinos.minlength
+    minlength = cmd.options.minlength
     ## TODO: Implement tol -- maybe like bwa's quality trimmer
     
     nreads = 0
@@ -67,14 +67,16 @@ def do_strip(cmd):
         m = regex.search(seq)
         if m:
             to = m.span()[0]
-            read.sequence = seq[:to]
-            read.quality = qual[:to]
-            rid = "%s::%s" % (rid, translate_match(m.group()))
-            seq = read.sequence[:-n]
+            seq = seq[:to]
             read.sequence = seq
-            read.quality = read.quality[:-n]
+            read.quality = qual[:to]
+            # TODO: Implement translate_match when we implement tolerance
+            # rid = "%s::%s" % (rid, translate_match(m.group()))
+            rid = "%s::A%d" % (rid, len(m.group()))
+        else:
+            rid = "%s::%d" % (rid, 0)
         read.id = rid
-        L = nchar(seq)
+        L = len(seq)
         if L > 4 and minlength > 0 and L > minlength:
             write(str(read))
     cmd.add_stat('Reads processed', nreads)
