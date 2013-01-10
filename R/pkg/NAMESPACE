@@ -28,6 +28,8 @@ exportMethods(aligner,
               getAllReads,
               getReadsFromSequence,
               swapStrand,
+              TPM,
+              iTPM,
 
               ## GenomicRanges
               order,
