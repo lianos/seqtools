@@ -29,10 +29,10 @@ __outcons = {
 def do_translate(cmd):
     format = cmd.options.format
     trantab = maketrans(cmd.args[0], cmd.args[1])
-    
+
     parse = __parsers[format]
     cons = __outcons[format]
-    
+
     write = cmd.outfile.write
     nreads = 0
 
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     parser = OptionParser(usage=usage)
     parser.add_option('-f', '--format', default="fastq",
                       help="Sequence formt [fastq]")
-                      
+
     cmd = seqtools.Command(do_translate, parser, in_arg=2, out_arg=3,
                            name='ngs-convert-quals')
 

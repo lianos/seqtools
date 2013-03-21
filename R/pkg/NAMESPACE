@@ -6,9 +6,9 @@ import(GenomicRanges)
 import(Biostrings)
 import(BSgenome)
 import(Rsamtools)
-import(multicore)
+import(parallel)
 import(foreach)
-import(doMC)
+import(doParallel)
 import(data.table)
 
 exportMethods(aligner,
