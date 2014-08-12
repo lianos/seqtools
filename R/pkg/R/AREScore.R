@@ -7,15 +7,14 @@ AREscore <- function(x, basal=1.0, overlapping=1.5, d1.3=0.75, d4.6=0.4,
                      d7.9=0.2, within.AU=0.3,
                      aub.min.length=20, aub.p.to.start=0.8, aub.p.to.end=0.55) {
   xtype <- match.arg(substr(class(x), 1, 3), c("DNA", "RNA"))
-  pentamer <- "ATTTA"
-  overmer <- "ATTTATTTA"
-  if (xtype == "RNA") {
+  if (type == "DNA") {
+    pentamer <- "ATTTA"
+    overmer <- "ATTTATTTA"
+  } else {
     pentamer <- "AUUUA"
     overmer <- "ATTTATTTA"
   }
 
-  pentamer <- "GGGGG"
-  overmer <- "GGGGGGG"
   x <- as(x, sprintf("%sStringSet", xtype))
 
   pmatches <- vmatchPattern(pentamer, x)
@@ -69,8 +68,9 @@ identifyAUBlocks <- function(x, min.length=20, p.to.start=0.8, p.to.end=0.55) {
   stopifnot(isSingleNumber(p.to.end) && p.to.end >= 0.20 && p.to.end <= 0.70)
   stopifnot(p.to.start > p.to.end)
 
-  AU <- "AT"
-  if (xtype == "RNA") {
+  if (xtype == "DNA") {
+    AU <- "AT"
+  } else {
     AU <- "AU"
   }
 
