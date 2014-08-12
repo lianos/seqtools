@@ -7,7 +7,7 @@ AREscore <- function(x, basal=1.0, overlapping=1.5, d1.3=0.75, d4.6=0.4,
                      d7.9=0.2, within.AU=0.3,
                      aub.min.length=20, aub.p.to.start=0.8, aub.p.to.end=0.55) {
   xtype <- match.arg(substr(class(x), 1, 3), c("DNA", "RNA"))
-  if (type == "DNA") {
+  if (xtype == "DNA") {
     pentamer <- "ATTTA"
     overmer <- "ATTTATTTA"
   } else {
